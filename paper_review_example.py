@@ -13,7 +13,7 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("
 deepseek_clinet = OpenAI(api_key=os.getenv('DEEPSEEK_API_KEY'), base_url=os.getenv('DEEPSEEK_BASE_URL'))
 
 # load paper
-text = load_paper("./example_data/attention.pdf")
+text = load_paper("./paper_review_example/attention.pdf")
 
 """
 reviewer_system_prompt: 有三个等级
