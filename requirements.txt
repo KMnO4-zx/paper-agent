@@ -7,3 +7,5 @@ pymupdf4llm
 # Common Requirements
 numpy
 tqdm
+# env
+python-dotenv
