@@ -4,7 +4,7 @@ import json
 from pypdf import PdfReader
 import pymupdf
 import pymupdf4llm
-from llm import (
+from src.llm import (
     get_response_from_llm,
     get_batch_responses_from_llm,
     extract_json_between_markers,
@@ -12,7 +12,7 @@ from llm import (
 import pprint
 import openai
 
-from prompt import *
+from src.prompt import *
 
 from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv())
