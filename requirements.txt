@@ -1,0 +1,9 @@
+# LLM APIs
+backoff
+openai
+# Viz
+pypdf
+pymupdf4llm
+# Common Requirements
+numpy
+tqdm
