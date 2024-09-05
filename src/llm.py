@@ -93,6 +93,7 @@ def get_batch_responses_from_llm(
         "gpt-4o-2024-05-13",
         "gpt-4o-mini-2024-07-18",
         "gpt-4o-2024-08-06",
+        "gpt-4o",
     ]:
         new_msg_history = msg_history + [{"role": "user", "content": msg}]  # 将用户消息添加到历史记录中
         response = client.chat.completions.create(
@@ -113,6 +114,8 @@ def get_batch_responses_from_llm(
         ]
     elif model == "deepseek-chat":
         new_msg_history = msg_history + [{"role": "user", "content": msg}]
+        # 实测 deepseek n_responses 参数无效，只能生成一个响应
+        # 如果使用 deepseek-chat 模型，并且报错了，而你找到了这里，恭喜你，你发现了一个 bug！哈哈哈哈
         response = client.chat.completions.create(
             model="deepseek-chat",
             messages=[

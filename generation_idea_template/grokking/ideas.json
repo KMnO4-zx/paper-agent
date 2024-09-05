@@ -1,0 +1,191 @@
+[
+    {
+        "Name": "batch_size_grokking",
+        "Title": "Batch Size Grokking: Assessing the impact of the training batchsize on the grokking phenomenon",
+        "Experiment": "Modify the experiments to dynamically adjust the batch size during training, starting with a small batch size and gradually increasing it. This could potentially lead to faster generalization on the validation set.",
+        "Interestingness": 6,
+        "Feasibility": 4,
+        "Novelty": 4,
+        "novel": true
+    },
+    {
+        "Name": "learning_rate_grokking",
+        "Title": "Learning Rate Grokking: Investigating the Effect of Adaptive Learning Rate Schedules on the Grokking Phenomenon",
+        "Experiment": "Implement various adaptive learning rate schedules such as cyclical learning rates and learning rate warm restarts. Modify the 'scheduler' in the 'run' function to incorporate these strategies. Track the number of batches needed to achieve a validation accuracy above 99% for each learning rate strategy across different datasets. Analyze how these schedules influence both the speed of grokking and the final generalization performance.",
+        "Interestingness": 8,
+        "Feasibility": 6,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "noise_impact_grokking",
+        "Title": "Noise Impact on Grokking: Evaluating the Role of Data Noise in the Transition from Memorization to Generalization",
+        "Experiment": "Introduce Gaussian noise to the inputs of the datasets within the 'fetch_example' method of each dataset class. Control the noise level using a parameter that varies across experiments. Monitor how different noise levels affect the number of batches required to achieve a validation accuracy above 99% and assess the final generalization performance. Analyze the impact of noise on grokking across different mathematical operation datasets.",
+        "Interestingness": 7,
+        "Feasibility": 5,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "architecture_grokking",
+        "Title": "Architectural Influences on Grokking: Analyzing the Impact of Model Depth and Width",
+        "Experiment": "Modify the 'Transformer' class initialization in the 'run' function to experiment with different numbers of layers (e.g., 2 to 6) and dimensions (widths, e.g., 64 to 256) of the model. Systematically vary these parameters while tracking the number of training batches needed to achieve a validation accuracy above 99% across different datasets. Analyze how model depth and width influence the grokking phenomenon and generalization performance, potentially identifying architecture configurations that optimize grokking and generalization.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "data_augmentation_grokking",
+        "Title": "Data Augmentation in Grokking: Exploring the Impact on Generalization",
+        "Experiment": "Enhance the 'fetch_train_example' method for each dataset class to include augmentation strategies, such as swapping operands for addition and subtraction, using multiplicative inverses for division, and utilizing permutations for permutation groups. Ensure these transformations maintain the integrity of mathematical operations. Track the number of training batches needed to achieve validation accuracy above 99%, comparing results with and without augmentation. Evaluate the effect on grokking and generalization across datasets.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "initialization_grokking",
+        "Title": "Initialization Grokking: Exploring the Impact of Weight Initialization on the Grokking Phenomenon",
+        "Experiment": "Modify the initialization of the 'Transformer' model's weights in the '__init__' method in the Transformer class. Implement and test different initialization strategies such as Xavier, He, and uniform initialization. Track the number of batches needed to achieve a validation accuracy above 99% for each initialization strategy across different datasets. Analyze how these initializations impact both the speed of grokking and final generalization performance.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "dropout_grokking",
+        "Title": "Dropout Grokking: Examining the Impact of Dropout Rates on the Grokking Phenomenon",
+        "Experiment": "Integrate dropout layers within the Transformer model's 'DecoderBlock' class by adding a dropout layer after the self-attention and feedforward operations. Experiment with various dropout rates (e.g., 0, 0.1, 0.3, 0.5) during the 'run' function. Track the number of training batches needed to achieve a validation accuracy above 99% for each dropout rate across different datasets. Compare the speed of grokking and final generalization performance with and without dropout.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "optimizer_grokking",
+        "Title": "Optimizer Grokking: Investigating the Influence of Optimizer Choice on the Grokking Phenomenon",
+        "Experiment": "Modify the 'optimizer' initialization in the 'run' function to experiment with different optimization algorithms such as SGD with momentum, RMSprop, Adagrad, and Adadelta. Track the number of training batches needed to achieve a validation accuracy above 99% for each optimizer across different datasets. Compare the grokking speed and final generalization performance to determine if any optimizer particularly enhances or hinders the grokking process.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "data_sparsity_grokking",
+        "Title": "Data Sparsity and Grokking: Evaluating the Impact of Sparse Training Data on Generalization",
+        "Experiment": "Modify the 'fetch_train_example' method to introduce sparsity by randomly removing a percentage of training pairs while maintaining class balance. Implement sparsity levels from 0% to 50%. Track the number of training batches needed to achieve a validation accuracy above 99% across different datasets under different sparsity conditions. Analyze whether certain types of operations or architectures are more robust to data sparsity and how it affects grokking speed and generalization performance.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "embedding_init_grokking",
+        "Title": "Embedding Initialization and Grokking: Analyzing the Effect of Embedding Layer Initialization on the Grokking Phenomenon",
+        "Experiment": "Modify the 'Transformer' class to allow different initialization strategies for the embedding layer. Explore uniform, normal, and potentially pre-trained embeddings. Track the number of training batches needed to achieve a validation accuracy above 99% across different datasets. Evaluate whether certain initialization methods accelerate grokking or improve generalization performance, particularly focusing on embedding layers' role.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "curriculum_grokking",
+        "Title": "Curriculum Grokking: Impact of Progressive Learning Strategies on the Grokking Phenomenon",
+        "Experiment": "Implement a curriculum learning strategy by modifying the 'fetch_train_example' method to initially present simpler examples (e.g., operations with smaller numbers or permutations with fewer swaps) and gradually introduce more complex ones. Introduce a parameter defining the progression schedule. Track the number of training batches needed to achieve a validation accuracy above 99% across different datasets and compare with baseline. Analyze how curriculum learning impacts the speed of grokking and final generalization performance.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "sequence_length_grokking",
+        "Title": "Sequence Length Grokking: Investigating the Effect of Sequence Length on the Grokking Phenomenon",
+        "Experiment": "Modify the 'seq_len' parameter in the 'Transformer' class initialization to explore different sequence lengths (e.g., 3, 5, 7, 9). Track the number of training batches needed to achieve a validation accuracy above 99% for each sequence length across different datasets. Analyze how sequence length impacts the grokking phenomenon and generalization performance, potentially identifying sequence lengths that optimize grokking.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "irrelevant_feature_grokking",
+        "Title": "Irrelevant Feature Grokking: Investigating the Effect of Irrelevant Features on the Grokking Phenomenon",
+        "Experiment": "Modify the 'fetch_example' method in each dataset class to introduce additional input features that do not affect the output label. Implement a parameter to control the number of irrelevant features added. Track the number of training batches needed to achieve a validation accuracy above 99% with varying amounts of irrelevant features. Analyze how these features impact the speed of grokking and the final generalization performance across different datasets.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "regularization_grokking",
+        "Title": "Regularization Grokking: Investigating the Impact of Regularization Techniques on the Grokking Phenomenon",
+        "Experiment": "Integrate different regularization techniques (e.g., L1, L2, weight decay) into the training process by modifying the 'optimizer' and potentially the loss function in the 'run' function. Implement and test various levels of regularization for each technique. Track the number of training batches needed to achieve a validation accuracy above 99% for each regularization strategy across different datasets. Analyze how these techniques influence the grokking speed and final generalization performance, identifying any strategies that particularly facilitate or hinder the grokking process.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "encoding_grokking",
+        "Title": "Encoding Schemes and Grokking: Investigating the Impact of Input Encodings on the Grokking Phenomenon",
+        "Experiment": "Modify the 'encode' and 'decode' methods in the AbstractDataset class to implement different encoding schemes such as one-hot encoding, binary encoding, and positional encoding. Track the number of training batches needed to achieve a validation accuracy above 99% for each encoding scheme across different datasets. Analyze how these encoding schemes impact the grokking phenomenon and generalization performance.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "loss_function_grokking",
+        "Title": "Loss Function Grokking: Exploring the Impact of Different Loss Functions on the Grokking Phenomenon",
+        "Experiment": "Modify the 'train' and 'evaluate' functions to incorporate various loss functions such as Huber loss, focal loss, and custom smooth loss functions. Track the number of batches needed to achieve a validation accuracy above 99% for each loss function across datasets. Analyze how the choice of loss function affects the grokking speed and generalization performance, identifying any that enhance or hinder grokking. This will reveal insights into how loss landscapes influence learning dynamics.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "activation_function_grokking",
+        "Title": "Activation Function Grokking: Investigating the Impact of Different Activation Functions on the Grokking Phenomenon",
+        "Experiment": "Modify the 'DecoderBlock' class to experiment with different activation functions such as ReLU, Sigmoid, Swish, and Mish in place of GELU. Track the number of training batches needed to achieve a validation accuracy above 99% for each activation function across different datasets. Compare how these activation functions influence the grokking speed and generalization performance, potentially identifying non-linearities that enhance the grokking process.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "masking_strategy_grokking",
+        "Title": "Masking Strategy Grokking: Investigating the Impact of Attention Masks on the Grokking Phenomenon",
+        "Experiment": "Modify the 'DecoderBlock' class to implement different masking strategies in the self-attention mechanism. Experiment with strategies like full masking (no attention allowed), partial masking (randomly masking certain positions), and dynamic masking (adjusting masks during training). Track the number of training batches needed to achieve a validation accuracy above 99% for each masking strategy across different datasets. Analyze how these strategies impact the grokking speed and generalization performance, identifying any that facilitate or hinder the process.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "interpretability_grokking",
+        "Title": "Interpretability and Grokking: Unveiling the Decision-Making Process during Grokking",
+        "Experiment": "Integrate interpretability methods into the training and evaluation process. Implement attention visualization for the Transformer model by modifying the 'DecoderBlock' class to output attention weights. Use these visualizations to track how the model's focus shifts from memorization to generalization during training. Additionally, integrate feature importance techniques such as SHAP or LIME to identify which input features are most influential during different training stages. Track the number of batches needed to achieve 99% validation accuracy and correlate these insights with interpretability outcomes. Analyze how interpretability can provide deeper insights into the grokking phenomenon and potentially guide future model improvements.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "representation_analysis_grokking",
+        "Title": "Representation Analysis in Grokking: Understanding Internal Transformations from Memorization to Generalization",
+        "Experiment": "Implement hooks in the Transformer model to capture activations and embeddings at different layers and training stages. Use dimensionality reduction techniques such as PCA or t-SNE to visualize these representations. Track changes over time to observe how representations evolve from memorization to generalization. Compare the representations across different datasets and training configurations to identify common patterns and differences. Analyze how these insights correlate with the grokking phenomenon and generalization performance.",
+        "Interestingness": 9,
+        "Feasibility": 6,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "adversarial_grokking",
+        "Title": "Adversarial Grokking: Investigating the Impact of Adversarial Training on the Grokking Phenomenon",
+        "Experiment": "Integrate adversarial training into the 'train' function by implementing the Fast Gradient Sign Method (FGSM) to generate adversarial examples during training. Include these adversarial examples in the training loop. Measure the number of training batches required to achieve 99% validation accuracy on both original and adversarial datasets. Compare grokking speed and generalization performance with and without adversarial training across datasets. Analyze if adversarial robustness influences the grokking transition, providing insights into model robustness and generalization.",
+        "Interestingness": 9,
+        "Feasibility": 6,
+        "Novelty": 9,
+        "novel": true
+    }
+]
