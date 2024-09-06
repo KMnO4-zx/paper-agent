@@ -45,6 +45,42 @@ python generation_idea_example.py
 
 > note: 代码的运行结果还会保存在 `base_dir` 目录下的 `ideas.json` 文件中。
 
+#### 代码详解
+
+`generation_idea_example.py` 文件中大致代码如下：
+
+- `generate_ideas`：用于生成 idea。
+- `check_idea_novelty`：用于检查 idea 的新颖性。但需要申请 emantic Scholar 的 API Key。
+- `generation_idea_code`：可以根据以上两个函数生成idea来生成代码。如果已经 `check novelty`，会直接生成 `novel=True` 的代码，如果没有 `check novelty`，会生成所有的代码。
+
+```python
+# gpt-4o
+# generate ideas
+# 会自动保存 ideas 的结果到文件中，下次运行时会直接从文件中加载
+ideas = generate_ideas(
+    base_dir=base_dir,
+    client=openai_client,
+    model=openai_model,
+    skip_generation=False,
+    max_num_generations=20,
+    num_reflections=5,
+)
+
+# check novelty
+# 会自动更新 novelty 的结果到 ideas.json 文件中，下次运行时会直接从文件中加载
+novelty_ideas = check_idea_novelty(
+    ideas=ideas,
+    base_dir=base_dir,
+    client=openai_client,
+    model=openai_model,
+)
+
+# generate ideas with code ，自动保存 code 到 base_dir/code 目录下
+generation_idea_code(base_dir=base_dir, client=openai_client, model=openai_model, num_reflections=5)
+
+pprint.pp(novelty_ideas)
+```
+
 ### Paper Review
 
 运行代码可以参考 `paper_review_example.py` 文件，也可以直接运行该文件。
