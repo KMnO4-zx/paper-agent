@@ -12,13 +12,15 @@ def get_response_from_llm(
     msg,  # 用户输入的消息
     client,  # 用于与 API 交互的客户端对象
     model,  # 指定使用的模型
-    system_message,  # 系统消息，用于设定对话上下文
+    system_message=None,  # 系统消息，用于设定对话上下文
     print_debug=False,  # 是否打印调试信息
     msg_history=None,  # 对话的历史记录
     temperature=0.75,  # 生成的文本的多样性
 ):
     if msg_history is None:
         msg_history = []  # 如果没有提供历史记录，则初始化为空列表
+    if system_message is None:
+        system_message = "You are a helpful assistant."  # 如果没有提供系统消息，则使用默认消息
 
     # 如果模型是 OpenAI 系列的 GPT-4o 模型之一
     if model in [
@@ -79,7 +81,7 @@ def get_batch_responses_from_llm(
     msg,  # 用户输入的消息
     client,  # 用于与 API 交互的客户端对象
     model,  # 指定使用的模型
-    system_message,  # 系统消息，用于设定对话上下文
+    system_message=None,  # 系统消息，用于设定对话上下文
     print_debug=False,  # 是否打印调试信息
     msg_history=None,  # 对话的历史记录
     temperature=0.75,  # 生成的文本的多样性
@@ -87,6 +89,8 @@ def get_batch_responses_from_llm(
 ):
     if msg_history is None:
         msg_history = []  # 如果没有提供历史记录，则初始化为空列表
+    if system_message is None:
+        system_message = "You are a helpful assistant."  # 如果没有提供系统消息，则使用默认消息
 
     # 如果指定的模型是 OpenAI 系列的 GPT-4o 模型之一
     if model in [

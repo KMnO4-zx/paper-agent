@@ -1,3 +1,12 @@
+"""
+Modify the SEAttention class to incorporate a dynamic scaling factor for attention weights
+Implement a new function that computes scaling factors based on the spatial dimensions of feature maps
+Integrate this function into the forward pass of SEAttention to adjust attention weights dynamically
+Evaluate performance using precision, recall, and F1-score on small target detection tasks, comparing against the baseline SEAttention model and other enhanced models to demonstrate improvements in detecting small targets
+
+"""
+
+# Modified code
 import numpy as np
 import torch
 from torch import flatten, nn
@@ -9,7 +18,7 @@ from torch.nn import functional as F
 
 class SEAttention(nn.Module):
 
-    def __init__(self, channel=512,reduction=16):
+    def __init__(self, channel=512, reduction=16):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
@@ -33,10 +42,17 @@ class SEAttention(nn.Module):
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
+    def compute_dynamic_scaling_factor(self, x):
+        _, _, h, w = x.size()
+        factor = 1 + np.log2(h * w) / 10.0
+        return factor
+
     def forward(self, x):
         b, c, _, _ = x.size()
+        scaling_factor = self.compute_dynamic_scaling_factor(x)
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
+        y = y * scaling_factor  # Apply dynamic scaling factor
         return x * y.expand_as(x)
     
 if __name__ == '__main__':

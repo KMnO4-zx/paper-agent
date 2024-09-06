@@ -106,21 +106,19 @@ In <JSON>, respond in JSON format with ONLY the following field:
 A query will work best if you are able to recall the exact name of the paper you are looking for, or the authors.
 This JSON will be automatically parsed, so ensure the format is precise.'''
 
-coder_prompt = """Your goal is to implement the following idea: {title}.
-The proposed experiment is as follows: {idea}.
-You are given a total of up to {max_runs} runs to complete the necessary experiments. You do not need to use all {max_runs}.
+coder_prompt = """
+Your task is to directly modify the **original code** according to the **experimental idea** and provide the modified code.
 
-First, plan the list of experiments you would like to run. For example, if you are sweeping over a specific hyperparameter, plan each value you would like to test for each run.
+**Title:** {title}  
+**Experimental Idea:** {idea}  
+**Original Code:** {code}
 
-Note that we already provide the vanilla baseline results, so you do not need to re-run it.
+Please make the necessary changes directly in the original code and present the modified code in the following format:
 
-For reference, the baseline results are as follows:
-
-{baseline_results}
-
-After you complete each change, we will run the command `python experiment.py --out_dir=run_i' where i is the run number and evaluate the results.
-YOUR PROPOSED CHANGE MUST USE THIS COMMAND FORMAT, DO NOT ADD ADDITIONAL COMMAND LINE ARGS.
-You can then implement the next thing on your list."""
+```python
+# Modified code
+```
+"""
 
 reviewer_system_prompt_base = (
     "You are an AI researcher who is reviewing a paper that was submitted to a prestigious ML venue."

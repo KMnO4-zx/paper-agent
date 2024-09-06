@@ -8,7 +8,7 @@ import openai
 import requests
 import backoff
 
-from src.prompt import idea_first_prompt, idea_reflection_prompt, novelty_prompt, novelty_system_msg
+from src.prompt import idea_first_prompt, idea_reflection_prompt, novelty_prompt, novelty_system_msg, coder_prompt
 
 S2_API_KEY = os.getenv("S2_API_KEY")
 
@@ -272,3 +272,68 @@ def check_idea_novelty(
         json.dump(ideas, f, indent=4)
 
     return ideas
+
+def extract_code_between_markers(llm_output):
+    # 定义代码块的开始和结束标记
+    code_start_marker = "```python"
+    code_end_marker = "```"
+
+    # 找到代码块的开始和结束索引
+    start_index = llm_output.find(code_start_marker)
+    if start_index != -1:
+        start_index += len(code_start_marker)  # 将起始索引移动到标记之后的位置
+        end_index = llm_output.find(code_end_marker, start_index)
+    else:
+        return None  # 如果没有找到开始标记，则返回 None
+
+    if end_index == -1:
+        return None  # 如果没有找到结束标记，则返回 None
+
+    # 提取代码块字符串
+    code_string = llm_output[start_index:end_index].strip()  # 去除前后空格
+    return code_string  # 返回提取到的代码字符串
+
+
+def generation_idea_code(base_dir, client, model):
+    # 读取 ideas
+    with open(osp.join(base_dir, "ideas.json"), "r") as f:
+        ideas = json.load(f)
+    # 读取包含实验代码的文件内容
+    with open(osp.join(base_dir, "experiment.py"), "r") as f:
+        code = f.read()
+    # 读取包含实验代码的文件内容
+    with open(osp.join(base_dir, "prompt.json"), "r") as f:
+        prompt = json.load(f)
+    # 判断是否存在code目录，如果不存在就创建
+    code_dir = osp.join(base_dir, "code")
+    if not osp.exists(code_dir):
+        os.makedirs(code_dir)
+    
+    # 遍历每个想法，生成实验代码
+    for idea in ideas:
+        if idea['novel']:
+            response, his = get_response_from_llm(
+                coder_prompt.format(
+                    title=idea["Title"], 
+                    idea=idea["Experiment"], 
+                    code=code
+                ),
+                client=client,
+                model=model,
+                system_message=prompt['system'],
+                msg_history=[],
+            )
+
+            code_string = extract_code_between_markers(response)
+            
+            code_experiment = idea["Experiment"]
+            code_experiment = code_experiment.split(".")
+            code_experiment = '\n'.join(experiment.strip() for experiment in code_experiment)
+            code_experiment = '"""\n'+code_experiment+'\n\"""\n\n'
+            
+            if code_string is not None:
+                with open(osp.join(code_dir, f"{idea['Name']}.py"), "w") as f:
+                    f.write(code_experiment + code_string)
+                print(f"Code generated for idea: {idea['Name']}")
+            else:
+                print(f"Failed to extract code for idea: {idea['Name']}")
