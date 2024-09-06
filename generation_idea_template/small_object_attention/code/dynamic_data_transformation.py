@@ -17,24 +17,26 @@ from torch.nn import functional as F
 
 
 class DynamicDataTransformation(nn.Module):
-    
-    def __init__(self, transformations):
+    def __init__(self, channel):
         super().__init__()
-        self.transformations = transformations
-        self.weights = nn.Parameter(torch.ones(len(transformations)))  # Learnable weights for each transformation
+        self.transform = nn.Sequential(
+            nn.Conv2d(channel, channel, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(channel),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channel, channel, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(channel),
+            nn.Sigmoid()
+        )
     
     def forward(self, x):
-        transformed_data = [trans(x) for trans in self.transformations]
-        stacked_data = torch.stack(transformed_data, dim=0)
-        weights = F.softmax(self.weights, dim=0)
-        weighted_sum = torch.sum(weights.view(-1, 1, 1, 1, 1) * stacked_data, dim=0)
-        return weighted_sum
-
+        return x * self.transform(x)
+    
 
 class SEAttention(nn.Module):
 
     def __init__(self, channel=512, reduction=16):
         super().__init__()
+        self.data_transform = DynamicDataTransformation(channel)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction, bias=False),
@@ -58,31 +60,15 @@ class SEAttention(nn.Module):
                     init.constant_(m.bias, 0)
 
     def forward(self, x):
+        x = self.data_transform(x)
         b, c, _, _ = x.size()
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
         return x * y.expand_as(x)
     
-
-class EnhancedSEAttention(nn.Module):
-
-    def __init__(self, channel=512, reduction=16):
-        super().__init__()
-        self.data_transform = DynamicDataTransformation(transformations=[
-            lambda x: x,
-            lambda x: F.interpolate(x, scale_factor=0.5, mode='bilinear', align_corners=False),
-            lambda x: F.interpolate(x, scale_factor=2.0, mode='bilinear', align_corners=False)
-        ])
-        self.se_attention = SEAttention(channel, reduction)
-
-    def forward(self, x):
-        x_transformed = self.data_transform(x)
-        return self.se_attention(x_transformed)
-    
-
 if __name__ == '__main__':
-    model = EnhancedSEAttention()
-    model.se_attention.init_weights()
+    model = SEAttention()
+    model.init_weights()
     input = torch.randn(1, 512, 7, 7)
     output = model(input)
     print(output.shape)

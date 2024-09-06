@@ -9,50 +9,15 @@ Evaluate detection performance under various noise conditions using metrics such
 # Modified code
 import numpy as np
 import torch
-from torch import flatten, nn
+from torch import nn
 from torch.nn import init
-from torch.nn.modules.activation import ReLU
-from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
 from torch.optim import Adam
-from torch.autograd import Variable
+from torch.utils.data import DataLoader, TensorDataset
 
-# Define the Generator and Discriminator for the GAN
-class Generator(nn.Module):
-    def __init__(self, noise_dim=100, channel=512):
-        super().__init__()
-        self.fc = nn.Sequential(
-            nn.Linear(noise_dim, 128),
-            nn.ReLU(True),
-            nn.Linear(128, 256),
-            nn.ReLU(True),
-            nn.Linear(256, channel * 7 * 7),
-            nn.Tanh()
-        )
-
-    def forward(self, x):
-        x = self.fc(x)
-        return x.view(-1, 512, 7, 7)
-
-class Discriminator(nn.Module):
-    def __init__(self, channel=512):
-        super().__init__()
-        self.main = nn.Sequential(
-            nn.Linear(channel * 7 * 7, 512),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(512, 256),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(256, 1),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x):
-        x = x.view(x.size(0), -1)
-        return self.main(x)
 
 class SEAttention(nn.Module):
-
-    def __init__(self, channel=512,reduction=16):
+    def __init__(self, channel=512, reduction=16):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
@@ -82,63 +47,123 @@ class SEAttention(nn.Module):
         y = self.fc(y).view(b, c, 1, 1)
         return x * y.expand_as(x)
 
-def train(model, generator, discriminator, dataloader, criterion, optimizer, g_optimizer, d_optimizer, num_epochs=10):
-    for epoch in range(num_epochs):
-        for i, (inputs, labels) in enumerate(dataloader):
-            inputs, labels = inputs.cuda(), labels.cuda()
 
-            # Train Discriminator with real data
-            optimizer.zero_grad()
-            real_output = discriminator(inputs)
-            real_loss = criterion(real_output, torch.ones_like(real_output))
-            real_loss.backward()
+class Generator(nn.Module):
+    def __init__(self, noise_dim=100, image_channels=512):
+        super(Generator, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(noise_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, image_channels * 7 * 7),
+            nn.Tanh()
+        )
+        self.init_weights()
 
-            # Generate adversarial examples
-            noise = torch.randn(inputs.size(0), 100).cuda()
-            fake_inputs = generator(noise)
-            fake_output = discriminator(fake_inputs.detach())
-            fake_loss = criterion(fake_output, torch.zeros_like(fake_output))
-            fake_loss.backward()
-            d_optimizer.step()
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                init.normal_(m.weight, std=0.02)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
 
-            # Train Generator
-            g_optimizer.zero_grad()
-            fake_output = discriminator(fake_inputs)
-            g_loss = criterion(fake_output, torch.ones_like(fake_output))
-            g_loss.backward()
-            g_optimizer.step()
+    def forward(self, z):
+        z = self.fc(z)
+        z = z.view(-1, 512, 7, 7)
+        return z
 
-            # Train SEAttention model on clean + adversarial examples
-            model_output = model(inputs + fake_inputs)
-            loss = criterion(model_output, labels)
-            loss.backward()
-            optimizer.step()
 
-            if i % 100 == 0:
-                print(f"Epoch [{epoch}/{num_epochs}], Step [{i}/{len(dataloader)}], "
-                      f"D Loss: {real_loss.item() + fake_loss.item()}, G Loss: {g_loss.item()}, "
-                      f"Model Loss: {loss.item()}")
+class Discriminator(nn.Module):
+    def __init__(self, image_channels=512):
+        super(Discriminator, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(image_channels * 7 * 7, 256),
+            nn.LeakyReLU(0.2),
+            nn.Linear(256, 1),
+            nn.Sigmoid()
+        )
+        self.init_weights()
 
-if __name__ == '__main__':
-    model = SEAttention().cuda()
-    model.init_weights()
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                init.normal_(m.weight, std=0.02)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
 
-    generator = Generator().cuda()
-    discriminator = Discriminator().cuda()
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+        return x
+
+
+def train(model, generator, discriminator, data_loader, num_epochs=5, noise_dim=100, lr=0.001):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    generator.to(device)
+    discriminator.to(device)
+
+    optimizer_model = Adam(model.parameters(), lr=lr)
+    optimizer_g = Adam(generator.parameters(), lr=lr)
+    optimizer_d = Adam(discriminator.parameters(), lr=lr)
 
     criterion = nn.BCELoss()
-    optimizer = Adam(model.parameters(), lr=0.001)
-    g_optimizer = Adam(generator.parameters(), lr=0.001)
-    d_optimizer = Adam(discriminator.parameters(), lr=0.001)
 
-    # Dummy dataloader with random data
-    dataloader = [(torch.randn(8, 512, 7, 7).cuda(), torch.ones(8).cuda()) for _ in range(1000)]
+    for epoch in range(num_epochs):
+        for inputs, targets in data_loader:
+            inputs, targets = inputs.to(device), targets.to(device)
 
-    train(model, generator, discriminator, dataloader, criterion, optimizer, g_optimizer, d_optimizer)
+            # Training Discriminator
+            optimizer_d.zero_grad()
+            real_labels = torch.ones(inputs.size(0), 1).to(device)
+            fake_labels = torch.zeros(inputs.size(0), 1).to(device)
+            
+            outputs_real = discriminator(inputs)
+            loss_real = criterion(outputs_real, real_labels)
 
-    # Evaluate the model with noisy inputs
-    input = torch.randn(1, 512, 7, 7).cuda()
-    noise = torch.randn(1, 100).cuda()
-    adversarial_input = input + generator(noise)
-    output = model(adversarial_input)
-    print(output.shape)
+            noise = torch.randn(inputs.size(0), noise_dim, device=device)
+            fake_inputs = generator(noise)
+            outputs_fake = discriminator(fake_inputs.detach())
+            loss_fake = criterion(outputs_fake, fake_labels)
+
+            loss_d = loss_real + loss_fake
+            loss_d.backward()
+            optimizer_d.step()
+
+            # Training Generator
+            optimizer_g.zero_grad()
+            outputs_fake = discriminator(fake_inputs)
+            loss_g = criterion(outputs_fake, real_labels)
+            loss_g.backward()
+            optimizer_g.step()
+
+            # Training SEAttention model
+            optimizer_model.zero_grad()
+            outputs = model(inputs)
+            adv_examples = fake_inputs
+            adv_outputs = model(adv_examples)
+
+            loss_original = F.cross_entropy(outputs, targets)
+            loss_adv = F.cross_entropy(adv_outputs, targets)
+            loss_model = loss_original + loss_adv
+            loss_model.backward()
+            optimizer_model.step()
+
+            print(f"Epoch [{epoch+1}/{num_epochs}], Loss D: {loss_d.item():.4f}, Loss G: {loss_g.item():.4f}, Loss Model: {loss_model.item():.4f}")
+
+if __name__ == '__main__':
+    # Example usage
+    model = SEAttention()
+    model.init_weights()
+
+    # Initialize the generator and discriminator for adversarial training
+    generator = Generator()
+    discriminator = Discriminator()
+
+    # Dummy dataset
+    inputs = torch.randn(10, 512, 7, 7)
+    targets = torch.randint(0, 2, (10,))
+    dataset = TensorDataset(inputs, targets)
+    data_loader = DataLoader(dataset, batch_size=2, shuffle=True)
+
+    # Train the model with adversarial examples
+    train(model, generator, discriminator, data_loader)

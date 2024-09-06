@@ -16,11 +16,33 @@ from torch.nn import init
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
+from torch.distributions import Categorical
 
+class MonteCarloDropout(nn.Module):
+    def __init__(self, p=0.5):
+        super(MonteCarloDropout, self).__init__()
+        self.p = p
+
+    def forward(self, x):
+        return F.dropout(x, p=self.p, training=True)
+
+class UncertaintyEstimator(nn.Module):
+    def __init__(self, channel, num_samples=10):
+        super(UncertaintyEstimator, self).__init__()
+        self.num_samples = num_samples
+        self.dropout = MonteCarloDropout(p=0.5)
+        self.conv = nn.Conv2d(channel, channel, kernel_size=1)
+
+    def forward(self, x):
+        # Use Monte Carlo sampling to estimate uncertainty
+        predictions = torch.stack([self.conv(self.dropout(x)) for _ in range(self.num_samples)], dim=0)
+        mean_prediction = torch.mean(predictions, dim=0)
+        uncertainty = torch.var(predictions, dim=0).mean(dim=(2, 3), keepdim=True)  # Calculate uncertainty as variance
+        return mean_prediction, uncertainty
 
 class SEAttention(nn.Module):
 
-    def __init__(self, channel=512, reduction=16, dropout_rate=0.5):
+    def __init__(self, channel=512, reduction=16):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
@@ -29,13 +51,7 @@ class SEAttention(nn.Module):
             nn.Linear(channel // reduction, channel, bias=False),
             nn.Sigmoid()
         )
-        self.dropout = nn.Dropout(p=dropout_rate)
-        self.uncertainty_module = nn.Sequential(
-            nn.Conv2d(channel, channel, kernel_size=1, stride=1, padding=0),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(channel, 1, kernel_size=1, stride=1, padding=0),
-            nn.Sigmoid()
-        )
+        self.uncertainty_estimator = UncertaintyEstimator(channel)
 
     def init_weights(self):
         for m in self.modules():
@@ -53,22 +69,20 @@ class SEAttention(nn.Module):
 
     def forward(self, x):
         b, c, _, _ = x.size()
-        
-        # Estimate uncertainty
-        uncertainty_scores = self.uncertainty_module(x)
-        
-        # Apply dropout for Monte Carlo estimation
-        x_dropped = self.dropout(x)
-        
-        # Original SEAttention mechanism
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
         
-        # Adjust attention weights based on uncertainty
-        adjusted_attention = y * uncertainty_scores
+        # Estimate uncertainty
+        mean_prediction, uncertainty = self.uncertainty_estimator(x)
         
-        return x_dropped * adjusted_attention.expand_as(x_dropped)
-    
+        # Integrate uncertainty into attention weights
+        # Here, uncertainty is used to scale the attention weights, 
+        # with higher uncertainty leading to lower attention weights.
+        attention = x * y.expand_as(x)
+        adjusted_attention = attention * (1 - uncertainty)
+        
+        return adjusted_attention
+
 if __name__ == '__main__':
     model = SEAttention()
     model.init_weights()

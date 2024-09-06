@@ -16,22 +16,27 @@ from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
 
-class DynamicAttention(nn.Module):
+class SEAttention(nn.Module):
+
     def __init__(self, channel=512, reduction=16):
         super().__init__()
+        self.channel = channel
+        self.reduction = reduction
+        
         # Channel Attention Components
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc_channel = nn.Sequential(
+        self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
             nn.Linear(channel // reduction, channel, bias=False),
             nn.Sigmoid()
         )
+        
         # Spatial Attention Components
-        self.conv_spatial = nn.Sequential(
-            nn.Conv2d(2, 1, kernel_size=7, padding=3, bias=False),
-            nn.Sigmoid()
-        )
+        self.conv1 = nn.Conv2d(channel, channel // reduction, kernel_size=1)
+        self.conv2 = nn.Conv2d(channel // reduction, 1, kernel_size=1)
+        self.sigmoid = nn.Sigmoid()
+
         # Decision Layer
         self.decision_layer = nn.Sequential(
             nn.Linear(channel, 2),
@@ -52,31 +57,35 @@ class DynamicAttention(nn.Module):
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
+    def channel_attention(self, x, b, c):
+        y = self.avg_pool(x).view(b, c)
+        y = self.fc(y).view(b, c, 1, 1)
+        return x * y.expand_as(x)
+
+    def spatial_attention(self, x, b, c, h, w):
+        y = self.conv1(x)
+        y = self.conv2(y)
+        y = self.sigmoid(y)
+        return x * y.expand_as(x)
+
     def forward(self, x):
         b, c, h, w = x.size()
-
-        # Channel Attention
-        y_channel = self.avg_pool(x).view(b, c)
-        y_channel = self.fc_channel(y_channel).view(b, c, 1, 1)
-
-        # Spatial Attention
-        max_pool = torch.max(x, dim=1, keepdim=True)[0]
-        avg_pool = torch.mean(x, dim=1, keepdim=True)
-        y_spatial = torch.cat([max_pool, avg_pool], dim=1)
-        y_spatial = self.conv_spatial(y_spatial)
-
-        # Decision Layer
-        x_flat = x.view(b, c, -1).mean(dim=2)  # Global feature descriptor
-        decision_scores = self.decision_layer(x_flat)  # [prob_channel, prob_spatial]
-
-        # Weighted combination
-        out = x * (decision_scores[:, 0].view(b, 1, 1, 1) * y_channel.expand_as(x) + 
-                   decision_scores[:, 1].view(b, 1, 1, 1) * y_spatial.expand_as(x))
-
-        return out
-
+        
+        # Decision layer based on input features
+        avg_features = self.avg_pool(x).view(b, c)
+        decision = self.decision_layer(avg_features)
+        
+        # Split decision into channel and spatial attention weights
+        channel_weight, spatial_weight = decision[:, 0], decision[:, 1]
+        
+        # Apply attention based on decision weights
+        channel_attended = self.channel_attention(x, b, c) * channel_weight.view(b, 1, 1, 1)
+        spatial_attended = self.spatial_attention(x, b, c, h, w) * spatial_weight.view(b, 1, 1, 1)
+        
+        return channel_attended + spatial_attended
+    
 if __name__ == '__main__':
-    model = DynamicAttention()
+    model = SEAttention()
     model.init_weights()
     input = torch.randn(1, 512, 7, 7)
     output = model(input)

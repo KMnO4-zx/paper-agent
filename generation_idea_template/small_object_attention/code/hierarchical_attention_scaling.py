@@ -6,7 +6,6 @@ Evaluate performance using precision, recall, and F1-score on small target detec
 
 """
 
-# Modified code
 import numpy as np
 import torch
 from torch import flatten, nn
@@ -14,7 +13,6 @@ from torch.nn import init
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
-
 
 class SEAttention(nn.Module):
 
@@ -42,19 +40,19 @@ class SEAttention(nn.Module):
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
-    def compute_dynamic_scaling_factor(self, x):
+    def compute_scaling_factor(self, x):
         _, _, h, w = x.size()
-        factor = 1 + np.log2(h * w) / 10.0
-        return factor
+        # Example scaling factor: inverse of the sum of spatial dimensions
+        return 1.0 / (h + w)
 
     def forward(self, x):
         b, c, _, _ = x.size()
-        scaling_factor = self.compute_dynamic_scaling_factor(x)
+        scaling_factor = self.compute_scaling_factor(x)
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
-        y = y * scaling_factor  # Apply dynamic scaling factor
+        y = y * scaling_factor
         return x * y.expand_as(x)
-    
+
 if __name__ == '__main__':
     model = SEAttention()
     model.init_weights()

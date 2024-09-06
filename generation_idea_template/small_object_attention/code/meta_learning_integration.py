@@ -8,24 +8,27 @@ Conduct comparisons with the baseline SEAttention model and other enhanced model
 """
 
 # Modified code
+
 import numpy as np
 import torch
-from torch import flatten, nn
+from torch import flatten, nn, optim
 from torch.nn import init
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
-from torch.optim import Adam
-from torchmeta.modules import MetaModule, MetaLinear
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
+from sklearn.metrics import precision_score, recall_score, f1_score
 
-class SEAttention(MetaModule):
+class SEAttention(nn.Module):
+
     def __init__(self, channel=512, reduction=16):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
-            MetaLinear(channel, channel // reduction, bias=False),
+            nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
-            MetaLinear(channel // reduction, channel, bias=False),
+            nn.Linear(channel // reduction, channel, bias=False),
             nn.Sigmoid()
         )
 
@@ -38,7 +41,7 @@ class SEAttention(MetaModule):
             elif isinstance(m, nn.BatchNorm2d):
                 init.constant_(m.weight, 1)
                 init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear) or isinstance(m, MetaLinear):
+            elif isinstance(m, nn.Linear):
                 init.normal_(m.weight, std=0.001)
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
@@ -49,40 +52,85 @@ class SEAttention(MetaModule):
         y = self.fc(y).view(b, c, 1, 1)
         return x * y.expand_as(x)
 
-def meta_training_loop(model, meta_optimizer, train_tasks, num_inner_steps=1, inner_lr=0.01, outer_lr=0.001):
-    for task in train_tasks:
-        # Clone the model for each task to allow for task-specific adaptation
-        model_copy = model.clone()
-        optimizer = Adam(model_copy.parameters(), lr=inner_lr)
+class SmallTargetDataset(Dataset):
+    def __init__(self, data, labels, transform=None):
+        self.data = data
+        self.labels = labels
+        self.transform = transform
 
-        # Inner loop: Task-specific adaptation
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        sample, label = self.data[idx], self.labels[idx]
+        if self.transform:
+            sample = self.transform(sample)
+        return sample, label
+
+def meta_train(model, meta_optimizer, train_tasks, num_inner_steps=1, inner_lr=0.01, meta_lr=0.001):
+    model.train()
+
+    for task_data, task_labels in train_tasks:
+        # Clone model to compute task-specific updates
+        task_model = SEAttention(channel=512, reduction=16)
+        task_model.load_state_dict(model.state_dict())
+
+        # Inner loop optimization
+        inner_optimizer = optim.SGD(task_model.parameters(), lr=inner_lr)
         for _ in range(num_inner_steps):
-            support_inputs, support_labels = task.sample_support()
-            support_outputs = model_copy(support_inputs)
-            support_loss = F.mse_loss(support_outputs, support_labels)
-            optimizer.zero_grad()
-            support_loss.backward()
-            optimizer.step()
+            task_outputs = task_model(task_data)
+            task_loss = F.cross_entropy(task_outputs, task_labels)
+            inner_optimizer.zero_grad()
+            task_loss.backward()
+            inner_optimizer.step()
 
-        # Outer loop: Meta-update
-        query_inputs, query_labels = task.sample_query()
-        query_outputs = model_copy(query_inputs)
-        query_loss = F.mse_loss(query_outputs, query_labels)
+        # Outer loop update
         meta_optimizer.zero_grad()
-        query_loss.backward()
+        for param, task_param in zip(model.parameters(), task_model.parameters()):
+            param.grad = (task_param.data - param.data) / len(train_tasks)
         meta_optimizer.step()
 
+def evaluate_model(model, test_loader):
+    model.eval()
+    all_preds = []
+    all_labels = []
+    with torch.no_grad():
+        for data, labels in test_loader:
+            outputs = model(data)
+            preds = torch.argmax(outputs, dim=1)
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+    precision = precision_score(all_labels, all_preds, average='binary')
+    recall = recall_score(all_labels, all_preds, average='binary')
+    f1 = f1_score(all_labels, all_preds, average='binary')
+    return precision, recall, f1
+
 if __name__ == '__main__':
+    # Initialize model
     model = SEAttention()
     model.init_weights()
-    meta_optimizer = Adam(model.parameters(), lr=0.001)
 
-    # Assuming train_tasks is a predefined list of tasks for meta-training
-    # train_tasks = ...
+    # Example data and labels
+    data = torch.randn(100, 512, 7, 7)  # Example dataset
+    labels = torch.randint(0, 2, (100,))  # Binary labels
 
-    # Run the meta-training loop
-    # meta_training_loop(model, meta_optimizer, train_tasks)
+    # Transform and DataLoader
+    transform = transforms.Compose([transforms.ToTensor()])
+    dataset = SmallTargetDataset(data, labels, transform=transform)
+    dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 
-    input = torch.randn(1, 512, 7, 7)
-    output = model(input)
+    # Meta-training setup
+    meta_optimizer = optim.Adam(model.parameters(), lr=0.001)
+    train_tasks = [(data, labels) for data, labels in dataloader]
+
+    # Run meta-training
+    meta_train(model, meta_optimizer, train_tasks)
+
+    # Evaluate model
+    precision, recall, f1 = evaluate_model(model, dataloader)
+    print(f"Precision: {precision}, Recall: {recall}, F1-score: {f1}")
+
+    # Example test on new unseen task
+    test_input = torch.randn(1, 512, 7, 7)
+    output = model(test_input)
     print(output.shape)

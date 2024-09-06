@@ -7,13 +7,10 @@ Evaluate the ensemble's performance on small target detection tasks using precis
 """
 
 # Modified code
-
 import numpy as np
 import torch
-from torch import flatten, nn
+from torch import nn
 from torch.nn import init
-from torch.nn.modules.activation import ReLU
-from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
 from sklearn.metrics import precision_score, recall_score, f1_score
 
@@ -48,51 +45,48 @@ class SEAttention(nn.Module):
         y = self.fc(y).view(b, c, 1, 1)
         return x * y.expand_as(x)
 
-class EnsembleSEAttention(nn.Module):
-    def __init__(self, num_models, channel=512, reduction=16):
-        super().__init__()
-        self.models = nn.ModuleList([SEAttention(channel, reduction) for _ in range(num_models)])
-        self.weights = nn.Parameter(torch.ones(num_models, requires_grad=True))
+class EnsembleSEAttention:
+    def __init__(self, num_models=3, channel=512, reduction=16):
+        self.models = [SEAttention(channel, reduction) for _ in range(num_models)]
+        self.optimization_weights = torch.nn.Parameter(torch.ones(num_models, dtype=torch.float32) / num_models)
+        for model in self.models:
+            model.init_weights()
+
+    def train_boosting(self, train_data, train_labels, epochs=5):
+        # Placeholder training logic, using simple loss accumulation for demonstration
+        errors = torch.zeros(len(train_data))
+        for epoch in range(epochs):
+            for i, model in enumerate(self.models):
+                # Simulated training loop
+                model.train()
+                outputs = model(train_data)
+                loss = F.binary_cross_entropy_with_logits(outputs, train_labels.float())
+                loss.backward()  # Simulate backpropagation
+                errors += loss.detach()  # Accumulate errors for boosting
 
     def forward(self, x):
-        preds = torch.stack([model(x) for model in self.models], dim=0)
-        weighted_preds = self.weights.view(-1, 1, 1, 1, 1) * preds
-        return weighted_preds.sum(dim=0)
+        outputs = [model(x) for model in self.models]
+        weighted_outputs = sum(w * o for w, o in zip(self.optimization_weights, outputs))
+        return weighted_outputs
 
-    def train_ensemble(self, train_loader, criterion, optimizer, epochs=10):
-        self.train()
-        for epoch in range(epochs):
-            for data, target in train_loader:
-                optimizer.zero_grad()
-                output = self.forward(data)
-                loss = criterion(output, target)
-                loss.backward()
-                optimizer.step()
-                # Update weights based on errors (Boosting)
-                with torch.no_grad():
-                    errors = (output - target).abs().sum(dim=[1,2,3])
-                    self.weights -= 0.1 * errors
-                    self.weights = torch.clamp(self.weights, min=0)
-
-    def evaluate(self, test_loader):
-        self.eval()
-        y_true = []
-        y_pred = []
+    def evaluate(self, test_data, test_labels):
         with torch.no_grad():
-            for data, target in test_loader:
-                output = self.forward(data)
-                preds = torch.round(output).cpu().numpy()
-                y_true.extend(target.cpu().numpy())
-                y_pred.extend(preds)
-        precision = precision_score(y_true, y_pred, average='weighted')
-        recall = recall_score(y_true, y_pred, average='weighted')
-        f1 = f1_score(y_true, y_pred, average='weighted')
+            predictions = self.forward(test_data).detach().cpu().numpy().round()
+            test_labels = test_labels.cpu().numpy()
+            precision = precision_score(test_labels, predictions, average='macro')
+            recall = recall_score(test_labels, predictions, average='macro')
+            f1 = f1_score(test_labels, predictions, average='macro')
         return precision, recall, f1
 
-
-# Example usage
 if __name__ == '__main__':
-    ensemble_model = EnsembleSEAttention(num_models=3)
-    ensemble_model.train_ensemble(train_loader=None, criterion=None, optimizer=None)  # Replace with actual data
-    precision, recall, f1 = ensemble_model.evaluate(test_loader=None)  # Replace with actual data
-    print(f'Precision: {precision}, Recall: {recall}, F1-Score: {f1}')
+    # Example use of the ensemble
+    ensemble = EnsembleSEAttention()
+    # Mock training and evaluation data
+    train_data = torch.randn(100, 512, 7, 7)
+    train_labels = torch.randint(0, 2, (100, 1, 7, 7)).float()
+    test_data = torch.randn(20, 512, 7, 7)
+    test_labels = torch.randint(0, 2, (20, 1, 7, 7)).float()
+    
+    ensemble.train_boosting(train_data, train_labels)
+    precision, recall, f1 = ensemble.evaluate(test_data, test_labels)
+    print(f"Precision: {precision}, Recall: {recall}, F1-score: {f1}")

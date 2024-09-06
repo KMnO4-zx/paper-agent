@@ -15,7 +15,8 @@ from torch.nn import init
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
-from torch.nn.functional import adaptive_avg_pool2d
+import torchvision.transforms as transforms
+
 
 class SEAttention(nn.Module):
 
@@ -28,6 +29,21 @@ class SEAttention(nn.Module):
             nn.Linear(channel // reduction, channel, bias=False),
             nn.Sigmoid()
         )
+    
+    def complexity_score(self, x):
+        # Convert to grayscale for simplicity
+        gray_transform = transforms.Grayscale()
+        x_gray = gray_transform(x)
+        
+        # Compute pixel intensity variance as complexity score
+        variance = torch.var(x_gray, dim=(2, 3), keepdim=True)
+        
+        # Normalize the variance to be between 0 and 1
+        max_variance = torch.max(variance)
+        min_variance = torch.min(variance)
+        complexity_score = (variance - min_variance) / (max_variance - min_variance + 1e-5)
+        
+        return complexity_score
 
     def init_weights(self):
         for m in self.modules():
@@ -43,22 +59,19 @@ class SEAttention(nn.Module):
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
-    def complexity_score(self, x):
-        # Calculate pixel intensity variance as a measure of complexity
-        variance = torch.var(x, dim=(2, 3), keepdim=True)
-        normalized_variance = variance / (torch.mean(variance) + 1e-5)
-        return normalized_variance
-
     def forward(self, x):
         b, c, _, _ = x.size()
+        # Calculate complexity score
+        complexity = self.complexity_score(x)
+        
+        # Original SEAttention operations
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
         
-        # Integrate complexity score
-        complexity_score = self.complexity_score(x)
-        adjusted_attention = y * (1 + complexity_score)
-
-        return x * adjusted_attention.expand_as(x)
+        # Adjust attention weights using complexity score
+        adjusted_y = y * complexity
+        
+        return x * adjusted_y.expand_as(x)
     
 if __name__ == '__main__':
     model = SEAttention()

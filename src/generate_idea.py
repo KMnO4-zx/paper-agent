@@ -8,7 +8,7 @@ import openai
 import requests
 import backoff
 
-from src.prompt import idea_first_prompt, idea_reflection_prompt, novelty_prompt, novelty_system_msg, coder_prompt
+from src.prompt import idea_first_prompt, idea_reflection_prompt, novelty_prompt, novelty_system_msg, coder_prompt, coder_reflection_prompt
 
 S2_API_KEY = os.getenv("S2_API_KEY")
 
@@ -294,7 +294,7 @@ def extract_code_between_markers(llm_output):
     return code_string  # 返回提取到的代码字符串
 
 
-def generation_idea_code(base_dir, client, model):
+def generation_idea_code(base_dir, client, model, num_reflections=5):
     # 读取 ideas
     with open(osp.join(base_dir, "ideas.json"), "r") as f:
         ideas = json.load(f)
@@ -311,12 +311,15 @@ def generation_idea_code(base_dir, client, model):
     
     # 遍历每个想法，生成实验代码
     for idea in ideas:
-        if idea['novel']:
-            response, his = get_response_from_llm(
+        if 'novel' not in idea or idea['novel']:
+            print()
+            print(f"Start: Code generated for idea: {idea['Name']}")
+            response, msg_history = get_response_from_llm(
                 coder_prompt.format(
                     title=idea["Title"], 
                     idea=idea["Experiment"], 
-                    code=code
+                    code=code,
+                    num_reflections=num_reflections,
                 ),
                 client=client,
                 model=model,
@@ -324,16 +327,40 @@ def generation_idea_code(base_dir, client, model):
                 msg_history=[],
             )
 
-            code_string = extract_code_between_markers(response)
+            code_output = extract_code_between_markers(response)
             
+            # 如果反思次数大于1，则进行多次迭代改进
+            if num_reflections > 1:
+                for j in range(num_reflections - 1):
+                    print(f"Iteration {j + 2}/{num_reflections}")
+                    text, msg_history = get_response_from_llm(
+                        coder_reflection_prompt.format(
+                            current_round=j + 2, num_reflections=num_reflections
+                        ),
+                        client=client,
+                        model=model,
+                        system_message=prompt['system'],
+                        msg_history=msg_history,
+                    )
+                    # 再次解析输出，尝试从中提取 JSON 数据
+                    code_output = extract_code_between_markers(text)
+                    assert (
+                        code_output is not None
+                    ), "Failed to extract Code from LLM output"
+
+                    # 如果输出中包含 "I am done" 字样，则认为已收敛，提前退出循环
+                    if "I am done" in text:
+                        print(f"Code generation converged after {j + 2} iterations.")
+                        break
+
             code_experiment = idea["Experiment"]
             code_experiment = code_experiment.split(".")
             code_experiment = '\n'.join(experiment.strip() for experiment in code_experiment)
             code_experiment = '"""\n'+code_experiment+'\n\"""\n\n'
             
-            if code_string is not None:
+            if code_output is not None:
                 with open(osp.join(code_dir, f"{idea['Name']}.py"), "w") as f:
-                    f.write(code_experiment + code_string)
-                print(f"Code generated for idea: {idea['Name']}")
+                    f.write(code_experiment + code_output)
+                print(f"Done: Code generated for idea: {idea['Name']}")
             else:
                 print(f"Failed to extract code for idea: {idea['Name']}")

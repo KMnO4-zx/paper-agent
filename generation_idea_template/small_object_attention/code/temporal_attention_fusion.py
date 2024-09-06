@@ -15,20 +15,15 @@ from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
 
-class SEAttentionWithTemporal(nn.Module):
+class SEAttention(nn.Module):
 
-    def __init__(self, channel=512, reduction=16, lstm_hidden_size=128):
+    def __init__(self, channel=512,reduction=16):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
             nn.Linear(channel // reduction, channel, bias=False),
-            nn.Sigmoid()
-        )
-        self.lstm = nn.LSTM(input_size=channel, hidden_size=lstm_hidden_size, batch_first=True)
-        self.temporal_fc = nn.Sequential(
-            nn.Linear(lstm_hidden_size, channel),
             nn.Sigmoid()
         )
 
@@ -46,28 +41,44 @@ class SEAttentionWithTemporal(nn.Module):
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
-    def forward(self, x_seq):
-        # x_seq is expected to have shape (batch, seq_len, channel, height, width)
-        b, t, c, h, w = x_seq.size()
-        x_seq = x_seq.view(b * t, c, h, w)
-        
-        # SE Attention
-        y = self.avg_pool(x_seq).view(b * t, c)
-        y = self.fc(y).view(b, t, c, 1, 1)
-        se_output = x_seq.view(b, t, c, h, w) * y.expand_as(x_seq.view(b, t, c, h, w))
-        
-        # Temporal Attention
-        temporal_input = se_output.view(b, t, c, -1).mean(-1)  # Reduce spatial dimensions
-        temporal_output, _ = self.lstm(temporal_input)
-        temporal_weights = self.temporal_fc(temporal_output).view(b, t, c, 1, 1)
-        
-        # Element-wise multiplication of SE and Temporal Attention outputs
-        final_output = se_output * temporal_weights.expand_as(se_output)
-        return final_output
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x).view(b, c)
+        y = self.fc(y).view(b, c, 1, 1)
+        return x * y.expand_as(x)
+
+class TemporalAttention(nn.Module):
     
+    def __init__(self, channel=512, hidden_size=256, num_layers=1):
+        super().__init__()
+        self.gru = nn.GRU(input_size=channel, hidden_size=hidden_size, 
+                          num_layers=num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, channel)
+        self.sigmoid = nn.Sigmoid()
+    
+    def forward(self, x):
+        b, t, c, h, w = x.size()  # assuming input shape is (batch, time, channel, height, width)
+        x = x.view(b, t, c * h * w)  # flatten spatial dimensions
+        _, h_n = self.gru(x)  # h_n is the last hidden state
+        y = self.fc(h_n[-1])  # take the last layer's hidden state
+        y = self.sigmoid(y).view(b, c, 1, 1)
+        return y
+
+class SEAttentionWithTemporal(nn.Module):
+
+    def __init__(self, channel=512, reduction=16, hidden_size=256, num_layers=1):
+        super().__init__()
+        self.se_attention = SEAttention(channel, reduction)
+        self.temporal_attention = TemporalAttention(channel, hidden_size, num_layers)
+
+    def forward(self, x):
+        se_output = self.se_attention(x[:, -1])  # apply SEAttention on the last frame
+        temporal_map = self.temporal_attention(x)
+        return se_output * temporal_map.expand_as(se_output)
+
 if __name__ == '__main__':
     model = SEAttentionWithTemporal()
-    model.init_weights()
-    input_seq = torch.randn(1, 5, 512, 7, 7)  # Example input with sequence length 5
-    output = model(input_seq)
+    model.se_attention.init_weights()
+    input = torch.randn(1, 5, 512, 7, 7)  # example with 5-frame sequence
+    output = model(input)
     print(output.shape)

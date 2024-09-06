@@ -6,14 +6,13 @@ Evaluate performance improvements using precision, recall, and F1-score on small
 
 """
 
-# Modified code
+# Refined code
 import numpy as np
 import torch
-from torch import flatten, nn
+from torch import nn
 from torch.nn import init
-from torch.nn.modules.activation import ReLU
-from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
+
 
 class SEAttention(nn.Module):
 
@@ -26,6 +25,17 @@ class SEAttention(nn.Module):
             nn.Linear(channel // reduction, channel, bias=False),
             nn.Sigmoid()
         )
+        # Define a Laplacian kernel for sharpness calculation
+        self.laplacian_kernel = torch.tensor([[[[-1, -1, -1],
+                                                [-1,  8, -1],
+                                                [-1, -1, -1]]]], dtype=torch.float32)
+
+    def compute_quality_score(self, x):
+        # Apply the Laplacian kernel to compute sharpness
+        laplacian = F.conv2d(x, self.laplacian_kernel, padding=1)
+        sharpness = laplacian.var(dim=[2, 3], keepdim=True)
+        quality_score = torch.sigmoid(sharpness)  # Normalize to [0, 1]
+        return quality_score
 
     def init_weights(self):
         for m in self.modules():
@@ -41,28 +51,24 @@ class SEAttention(nn.Module):
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
-    def compute_quality_score(self, x):
-        # Example quality assessment using noise level (variance) and sharpness (Laplacian)
-        noise_level = torch.var(x, dim=(2, 3), keepdim=True)
-        laplacian = torch.nn.functional.conv2d(
-            x, weight=torch.tensor([[[[0, 1, 0], [1, -4, 1], [0, 1, 0]]]], dtype=x.dtype, device=x.device),
-            padding=1
-        )
-        sharpness = torch.mean(torch.abs(laplacian), dim=(2, 3), keepdim=True)
-        quality_score = 1.0 / (1.0 + noise_level) * (1.0 + sharpness)
-        return quality_score
-
     def forward(self, x):
         b, c, _, _ = x.size()
-        quality_score = self.compute_quality_score(x)
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
-        adaptive_weights = y * quality_score
-        return x * adaptive_weights.expand_as(x)
-    
+        
+        # Compute quality score and adjust attention weights
+        quality_score = self.compute_quality_score(x)
+        adjusted_y = y * quality_score
+        
+        return x * adjusted_y.expand_as(x)
+
+
 if __name__ == '__main__':
+    # Initialize the model and weights
     model = SEAttention()
     model.init_weights()
+
+    # Test the model with a random input
     input = torch.randn(1, 512, 7, 7)
     output = model(input)
     print(output.shape)

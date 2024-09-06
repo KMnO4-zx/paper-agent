@@ -108,6 +108,7 @@ This JSON will be automatically parsed, so ensure the format is precise.'''
 
 coder_prompt = """
 Your task is to directly modify the **original code** according to the **experimental idea** and provide the modified code.
+You are given a total of up to {num_reflections} runs to complete the necessary experiments. You do not need to use all {num_reflections}.
 
 **Title:** {title}  
 **Experimental Idea:** {idea}  
@@ -118,6 +119,25 @@ Please make the necessary changes directly in the original code and present the 
 ```python
 # Modified code
 ```
+"""
+
+coder_reflection_prompt = """
+Round {current_round}/{num_reflections}. 
+
+In your thoughts, first carefully consider the quality, novelty, and feasibility of the code generated based on the idea.  
+Include any other factors that you think are important in evaluating the code.  
+Ensure the code is clear, concise, and perfect.
+Do not make things overly complicated.  
+In the next attempt, try to refine and improve the code if needed.  
+Stick to the spirit of the original idea unless there are glaring issues.
+
+NEW CODE:  
+```python
+<CODE>
+```
+
+If you believe the code generated based on the idea is already excellent, simply add "I am done" at the end of your thoughts but before the code.  
+ONLY INCLUDE "I am done" IF YOU ARE MAKING NO MORE CHANGES.
 """
 
 reviewer_system_prompt_base = (

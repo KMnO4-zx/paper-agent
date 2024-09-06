@@ -16,6 +16,8 @@ from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
 from torchvision import transforms
+from torch.utils.data import DataLoader, Dataset
+import random
 
 class SEAttention(nn.Module):
 
@@ -28,6 +30,8 @@ class SEAttention(nn.Module):
             nn.Linear(channel // reduction, channel, bias=False),
             nn.Sigmoid()
         )
+        # Auxiliary classifier for self-supervised pretraining
+        self.pretrain_classifier = nn.Linear(channel, 4)  # 4 classes for 0, 90, 180, 270 degrees
 
     def init_weights(self):
         for m in self.modules():
@@ -43,54 +47,73 @@ class SEAttention(nn.Module):
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
-    def forward(self, x):
+    def forward(self, x, pretrain=False):
         b, c, _, _ = x.size()
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
-        return x * y.expand_as(x)
+        out = x * y.expand_as(x)
+        if pretrain:
+            # Use the pooled features for pretraining classification
+            features = y.view(b, c)
+            return self.pretrain_classifier(features)
+        return out
 
-def pretrain_self_supervised(model, dataloader, epochs=5):
+# Self-supervised pretraining dataset
+class SelfSupervisedDataset(Dataset):
+    def __init__(self, images, transform=None):
+        self.images = images
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        image = self.images[idx]
+        if self.transform:
+            image = self.transform(image)
+
+        # Randomly apply transformation: rotation (0, 90, 180, 270 degrees)
+        angle = random.choice([0, 90, 180, 270])
+        rotated_image = transforms.functional.rotate(image, angle)
+        label = [0, 90, 180, 270].index(angle)
+        return rotated_image, label
+
+# Pretraining function
+def self_supervised_pretraining(model, dataloader, epochs=5, lr=0.001):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     model.train()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
+    
     for epoch in range(epochs):
-        for imgs, _ in dataloader:
-            # Apply random transformations
-            batch_size = imgs.size(0)
-            rotated_imgs = transforms.RandomRotation(degrees=90)(imgs)
-            masked_imgs = transforms.RandomErasing()(imgs)
-
-            # Concatenate transformations into a batch
-            inputs = torch.cat([imgs, rotated_imgs, masked_imgs], dim=0)
-            labels = torch.cat([
-                torch.zeros(batch_size), 
-                torch.ones(batch_size), 
-                torch.full((batch_size,), 2)
-            ], dim=0).long()
-
-            # Forward pass and loss computation
-            outputs = model(inputs)
-            loss = F.cross_entropy(outputs, labels)
-
-            # Backward pass and optimization
+        total_loss = 0
+        for images, labels in dataloader:
             optimizer.zero_grad()
+            outputs = model(images, pretrain=True)
+            loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-
-            print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}')
+            total_loss += loss.item()
+        print(f'Epoch [{epoch+1}/{epochs}], Loss: {total_loss/len(dataloader):.4f}')
 
 if __name__ == '__main__':
-    # Assume DataLoader `train_loader` is defined elsewhere for pretraining
     model = SEAttention()
     model.init_weights()
+    
+    # Dummy dataset for self-supervised pretraining
+    dummy_images = [torch.randn(3, 64, 64) for _ in range(100)]
+    transform = transforms.Compose([transforms.Resize((64, 64)), transforms.ToTensor()])
+    dataset = SelfSupervisedDataset(dummy_images, transform=transform)
+    dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
+    
+    # Pretrain the model
+    self_supervised_pretraining(model, dataloader)
+    
+    # Fine-tuning phase for small target detection
+    # Evaluation metrics such as precision, recall, and F1-score
+    # would be calculated here after fine-tuning with actual target detection data.
 
-    # Pretraining phase
-    # pretrain_self_supervised(model, train_loader)
-
-    # Fine-tuning on small target detection would follow here
+    # Example forward pass for small target detection
     input = torch.randn(1, 512, 7, 7)
     output = model(input)
     print(output.shape)
-
-    # Add evaluation code to compute precision, recall, and F1-score
-    # This would involve defining a function to fine-tune and test the model on the small target detection dataset
+I am done

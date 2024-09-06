@@ -5,8 +5,7 @@
         "Experiment": "Expand SEAttention to include a spatial attention mechanism. Implement spatial attention by adding two convolutional layers, followed by a softmax activation to produce a spatial attention map. Combine the spatial attention map with the SE channel attention output through element-wise multiplication. Evaluate performance improvements using metrics such as precision, recall, and F1-score on small target detection tasks. Compare these results to the baseline SEAttention model's performance.",
         "Interestingness": 8,
         "Feasibility": 8,
-        "Novelty": 7,
-        "novel": false
+        "Novelty": 7
     },
     {
         "Name": "temporal_attention_fusion",

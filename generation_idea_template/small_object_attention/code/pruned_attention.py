@@ -8,6 +8,7 @@ Select the pruning method based on the model's characteristics to optimize effic
 """
 
 # Modified code
+
 import numpy as np
 import torch
 from torch import flatten, nn
@@ -15,13 +16,38 @@ from torch.nn import init
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
+import time
+
+def prune_weights(model, amount):
+    """Prune weights based on magnitude."""
+    parameters_to_prune = []
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Linear) or isinstance(module, nn.Conv2d):
+            parameters_to_prune.append((module, 'weight'))
+    
+    torch.nn.utils.prune.global_unstructured(
+        parameters_to_prune,
+        pruning_method=torch.nn.utils.prune.L1Unstructured,
+        amount=amount,
+    )
+    print(f"Weights pruned by {amount*100}%")
+
+def prune_channels(model, amount):
+    """Prune channels based on L1 norm."""
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Conv2d):
+            l1_norm = module.weight.abs().sum(dim=(1, 2, 3))
+            num_channels_to_prune = int(amount * module.out_channels)
+            prune_indices = torch.topk(l1_norm, num_channels_to_prune, largest=False).indices
+            new_weight = module.weight.data.clone()
+            new_weight[prune_indices, :, :, :] = 0
+            module.weight.data = new_weight
+    print(f"Channels pruned by {amount*100}%")
 
 class SEAttention(nn.Module):
 
     def __init__(self, channel=512, reduction=16):
         super().__init__()
-        self.channel = channel
-        self.reduction = reduction
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction, bias=False),
@@ -29,7 +55,6 @@ class SEAttention(nn.Module):
             nn.Linear(channel // reduction, channel, bias=False),
             nn.Sigmoid()
         )
-        self.pruned_channels = set()
 
     def init_weights(self):
         for m in self.modules():
@@ -51,51 +76,33 @@ class SEAttention(nn.Module):
         y = self.fc(y).view(b, c, 1, 1)
         return x * y.expand_as(x)
 
-    def prune_weights(self, prune_percentage=0.2):
-        with torch.no_grad():
-            device = next(self.parameters()).device
-            all_weights = torch.cat([param.view(-1) for param in self.fc.parameters()])
-            threshold = torch.quantile(torch.abs(all_weights), prune_percentage).to(device)
-            for param in self.fc.parameters():
-                mask = torch.abs(param) > threshold
-                param *= mask.float()
-
-    def prune_channels(self, prune_percentage=0.2):
-        with torch.no_grad():
-            device = next(self.parameters()).device
-            channel_weights = torch.stack([torch.norm(param, 2) for param in self.fc[0].weight.t()])
-            threshold = torch.quantile(channel_weights, prune_percentage).to(device)
-            self.pruned_channels = (channel_weights <= threshold).nonzero(as_tuple=True)[0].tolist()
-
-    def apply_pruning(self):
-        with torch.no_grad():
-            for pruned_channel in self.pruned_channels:
-                self.fc[0].weight.data[pruned_channel, :] = 0
-                self.fc[2].weight.data[:, pruned_channel] = 0
-
-def train_with_pruning(model, train_loader, optimizer, criterion, epochs=10, prune_interval=2):
+def fine_tune_model(model, dataloader, criterion, optimizer, epochs=1):
+    """Fine-tune the model after pruning."""
+    model.train()
     for epoch in range(epochs):
-        model.train()
-        for inputs, targets in train_loader:
+        for inputs, targets in dataloader:
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
+    print("Fine-tuning complete")
 
-        if epoch % prune_interval == 0:
-            model.prune_weights()
-            model.prune_channels()
-            model.apply_pruning()
-
-    # Fine-tuning after pruning
-    for _ in range(5):  # Fine-tune for an additional 5 epochs
-        for inputs, targets in train_loader:
-            optimizer.zero_grad()
+def evaluate_model(model, dataloader):
+    """Evaluate model's performance and efficiency."""
+    model.eval()
+    start_time = time.time()
+    correct, total = 0, 0
+    with torch.no_grad():
+        for inputs, targets in dataloader:
             outputs = model(inputs)
-            loss = criterion(outputs, targets)
-            loss.backward()
-            optimizer.step()
+            _, predicted = torch.max(outputs, 1)
+            total += targets.size(0)
+            correct += (predicted == targets).sum().item()
+    
+    inference_time = time.time() - start_time
+    accuracy = correct / total
+    print(f"Accuracy: {accuracy:.4f}, Inference Time: {inference_time:.4f}s")
 
 if __name__ == '__main__':
     model = SEAttention()
@@ -103,7 +110,16 @@ if __name__ == '__main__':
     input = torch.randn(1, 512, 7, 7)
     output = model(input)
     print(output.shape)
-
-    # Example on how to integrate the training loop with pruning
-    # Assuming train_loader, optimizer, and criterion are defined elsewhere
-    # train_with_pruning(model, train_loader, optimizer, criterion)
+    
+    # Example pruning and fine-tuning
+    prune_weights(model, amount=0.2)
+    prune_channels(model, amount=0.2)
+    
+    # Dummy dataloader, criterion, and optimizer for fine-tuning example
+    dataloader = [(input, torch.tensor([1]))]  # Replace with real data
+    criterion = nn.MSELoss()  # Replace with appropriate loss for detection
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    fine_tune_model(model, dataloader, criterion, optimizer, epochs=5)
+    
+    # Evaluate model performance
+    evaluate_model(model, dataloader)

@@ -16,7 +16,7 @@ from torch.nn import init
 from torch.nn.modules.activation import ReLU
 from torch.nn.modules.batchnorm import BatchNorm2d
 from torch.nn import functional as F
-import torchvision.transforms as T
+from torchvision import transforms
 
 class SEAttention(nn.Module):
 
@@ -49,60 +49,53 @@ class SEAttention(nn.Module):
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
         return x * y.expand_as(x)
+
+class ContrastiveLearningModule(nn.Module):
     
-# New functions for contrastive learning
-def generate_contrastive_pairs(data, augment=True):
-    transform = T.Compose([
-        T.RandomHorizontalFlip(),
-        T.RandomVerticalFlip(),
-        T.RandomRotation(10),
+    def __init__(self, feature_dim):
+        super().__init__()
+        self.projector = nn.Sequential(
+            nn.Linear(feature_dim, feature_dim, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(feature_dim, feature_dim, bias=False)
+        )
+    
+    def forward(self, x1, x2):
+        z1 = self.projector(x1)
+        z2 = self.projector(x2)
+        return z1, z2
+
+def contrastive_loss(z1, z2, temperature=0.5, device='cpu'):
+    z1 = F.normalize(z1, dim=1)
+    z2 = F.normalize(z2, dim=1)
+    batch_size = z1.size(0)
+    labels = torch.arange(batch_size).to(device)
+    similarity_matrix = torch.matmul(z1, z2.T) / temperature
+    loss = F.cross_entropy(similarity_matrix, labels)
+    return loss
+
+def generate_contrastive_pairs(input_data):
+    # Applying random augmentations to generate pairs
+    transform = transforms.Compose([
+        transforms.RandomResizedCrop(7),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip()
     ])
-    pairs = []
-    for img in data:
-        if augment:
-            augmented_img = transform(img)
-            pairs.append((img, augmented_img))  # positive pair
-        else:
-            synthetic_img = create_synthetic_image(img)
-            pairs.append((img, synthetic_img))  # negative pair
-    return pairs
-
-def create_synthetic_image(img):
-    # Implement synthetic image creation logic
-    synthetic_img = img.clone()  # For demonstration, just clone the image
-    return synthetic_img
-
-def contrastive_loss(output1, output2, target, margin=1.0):
-    euclidean_distance = F.pairwise_distance(output1, output2)
-    loss_contrastive = torch.mean((1 - target) * torch.pow(euclidean_distance, 2) +
-                                  (target) * torch.pow(torch.clamp(margin - euclidean_distance, min=0.0), 2))
-    return loss_contrastive
+    augmented_data_1 = transform(input_data)
+    augmented_data_2 = transform(input_data)
+    return augmented_data_1, augmented_data_2
 
 if __name__ == '__main__':
-    # Example of integrating contrastive learning in training
-    
-    model = SEAttention()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = SEAttention().to(device)
     model.init_weights()
+    contrastive_model = ContrastiveLearningModule(feature_dim=512).to(device)
+
+    input_data = torch.randn(10, 512, 7, 7).to(device)  # Example for a batch size of 10
+    output = model(input_data)
     
-    # Example data
-    input_data = torch.randn(10, 512, 7, 7)
-    contrastive_pairs = generate_contrastive_pairs(input_data, augment=True)
+    augmented_data_1, augmented_data_2 = generate_contrastive_pairs(input_data)
+    z1, z2 = contrastive_model(output.view(output.size(0), -1), output.view(output.size(0), -1))
+    cl_loss = contrastive_loss(z1, z2, device=device)
     
-    # Example training loop
-    for img1, img2 in contrastive_pairs:
-        output1 = model(img1)
-        output2 = model(img2)
-        
-        # Assume a binary target: 1 if positive pair, 0 if negative
-        target = torch.tensor([1.0])
-        loss = contrastive_loss(output1, output2, target)
-        
-        # Combine with standard detection loss (not implemented here)
-        # total_loss = detection_loss + loss
-        # total_loss.backward()
-        # optimizer.step()
-    
-    # Output for demonstration purposes
-    input_test = torch.randn(1, 512, 7, 7)
-    output_test = model(input_test)
-    print(output_test.shape)
+    print(f'Output shape: {output.shape}, Contrastive Loss: {cl_loss.item()}')
