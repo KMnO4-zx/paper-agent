@@ -1,0 +1,182 @@
+[
+    {
+        "Name": "parallel_voronoi",
+        "Title": "Enhancing Voronoi Diagram Generation with Parallel Processing",
+        "Experiment": "Use Python's multiprocessing library to parallelize the 'attribution' function. Divide the table into chunks that can be processed independently in separate processes. Each process will handle the computation of distances for its assigned chunk. Once all processes complete, the results will be merged to form the final Voronoi diagram. Evaluate the performance by comparing execution times on varying grid sizes with and without parallel processing. Additionally, ensure thread safety and manage shared resources carefully.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 6,
+        "novel": true
+    },
+    {
+        "Name": "spatial_structure_voronoi",
+        "Title": "Optimizing Voronoi Diagram Generation with Spatial Data Structures",
+        "Experiment": "Integrate a spatial data structure, such as a k-d tree or quadtree, to manage seed points. Modify the 'attribution' function to utilize this structure for efficient nearest neighbor queries. Implement the data structure from scratch or use an available library like scikit-learn's KDTree. Benchmark the Voronoi diagram generation on various grid sizes to compare execution times before and after the integration. Measure improvements in time complexity and assess scalability.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 7,
+        "novel": true
+    },
+    {
+        "Name": "adaptive_grid_voronoi",
+        "Title": "Adaptive Grid Refinement for Efficient Voronoi Diagram Generation",
+        "Experiment": "Implement a method to assess grid cell complexity based on the variation in distances to seed points. Modify the 'PaneVoronoi' class to include a recursive function that refines grid cells by subdividing them when the variance of the distance measurements exceeds a certain threshold. Test the algorithm on different seed distributions and evaluate performance gains by comparing execution time and output quality against the baseline fixed-grid implementation.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "sweep_line_voronoi",
+        "Title": "Leveraging Sweep Line Algorithms for Efficient Voronoi Diagram Construction",
+        "Experiment": "Implement a sweep line algorithm for Voronoi diagram construction within the 'PaneVoronoi' class. Introduce event handling for points and edges as the sweep line progresses. Modify the 'attribution' function to focus on event-based updates rather than exhaustive distance calculations. Benchmark the algorithm's performance on varying grid sizes and seed distributions, comparing execution times and accuracy with the existing approach. Assess its scalability and responsiveness to dynamic changes in seed points.",
+        "Interestingness": 9,
+        "Feasibility": 6,
+        "Novelty": 8,
+        "novel": false
+    },
+    {
+        "Name": "machine_learning_voronoi",
+        "Title": "Incorporating Machine Learning for Efficient Voronoi Diagram Generation",
+        "Experiment": "Develop a machine learning model to predict the nearest seed point for grid cells. Generate training data using the existing Voronoi diagram algorithm on various grid sizes and seed distributions. Train a lightweight model, such as a neural network or decision tree, to learn the mapping between grid positions and their closest seeds. Integrate this predictive model into the 'PaneVoronoi' class, modifying the 'attribution' function to utilize predictions. Evaluate performance by comparing execution times and accuracy with the baseline approach.",
+        "Interestingness": 9,
+        "Feasibility": 6,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "graph_based_voronoi",
+        "Title": "Harnessing Graph Theory for Efficient Voronoi Diagram Generation",
+        "Experiment": "Use a priority queue to dynamically expand the influence of seed points across the grid, analogous to breadth-first search without explicitly constructing a graph. Modify the 'attribution' function to utilize this queue-based propagation, ensuring efficient handling of neighboring grid cells. Evaluate the execution time and scalability improvements compared to the baseline approach.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "geometric_symmetry_voronoi",
+        "Title": "Exploiting Geometric Symmetry for Efficient Voronoi Diagram Generation",
+        "Experiment": "Introduce a preprocessing step to classify the grid's symmetry based on seed distribution using simple heuristics or pattern recognition. If symmetry is detected, modify the 'attribution' function to compute Voronoi cells for one part of the grid and apply geometric transformations (mirroring, rotation) for the rest. Test this on grids with varying levels of symmetry to compare execution times and accuracy to the baseline method, evaluating computational efficiency and the scenarios where this method works best.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "geometric_invariant_voronoi",
+        "Title": "Exploiting Geometric Invariants for Efficient Voronoi Diagram Computation",
+        "Experiment": "Introduce a preprocessing step in the 'PaneVoronoi' class that analyzes the seed distribution to detect geometric invariants like periodicity or symmetry. If such invariants are present, modify the 'attribution' function to compute Voronoi cells for one representative region and replicate the results for similar regions. Include a fallback mechanism that defaults to standard processing when no patterns are detected. Test this approach on grids with varying levels of geometric invariance and evaluate the computational efficiency gains compared to the baseline method.",
+        "Interestingness": 9,
+        "Feasibility": 6,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "geometric_boundary_voronoi",
+        "Title": "Direct Boundary Calculation for Efficient Voronoi Diagram Generation",
+        "Experiment": "Implement a boundary-based approach in the 'PaneVoronoi' class by introducing a graph-based structure to identify neighboring seed points. Add a function to compute perpendicular bisectors between these neighbors. Modify the 'attribution' function to assign points based on proximity to these boundaries. Evaluate performance improvements by comparing execution times and accuracy against the current exhaustive approach, with a focus on large grid sizes.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "predictive_voronoi",
+        "Title": "Leveraging Predictive Modeling for Efficient Voronoi Diagram Generation",
+        "Experiment": "Develop a regression model using scikit-learn to predict Voronoi cell boundaries based on grid and seed characteristics. Train the model on data from previous computations of Voronoi diagrams with varying grid sizes and seed distributions. Integrate this model into 'PaneVoronoi', modifying the 'attribution' function to use these predictions for initial boundary estimations. Evaluate by comparing execution times and accuracy against the baseline method, focusing on scenarios with similar seed distributions to the training set.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "evolutionary_voronoi",
+        "Title": "Enhancing Voronoi Diagram Generation Using Evolutionary Algorithms",
+        "Experiment": "Integrate a genetic algorithm to optimize seed point placement. Modify the 'PaneVoronoi' class to include functions for initializing random seed configurations and implementing genetic operations such as selection, crossover, and mutation. Develop a fitness function to evaluate configurations based on generation time and diagram accuracy. Run the genetic algorithm over multiple generations to identify optimal seed placements for varying grid sizes and distributions. Compare performance metrics, including execution time and Voronoi cell quality, with the baseline approach.",
+        "Interestingness": 10,
+        "Feasibility": 6,
+        "Novelty": 9,
+        "novel": false
+    },
+    {
+        "Name": "hierarchical_clustering_voronoi",
+        "Title": "Optimizing Voronoi Diagram Generation with Hierarchical Clustering",
+        "Experiment": "Implement hierarchical clustering in the 'PaneVoronoi' class to group seed points based on spatial proximity. Update the 'attribution' function to first identify the nearest cluster using a simple distance metric, then calculate the closest seed point within that cluster. This approach reduces the total number of distance calculations needed. Compare execution time and accuracy of the Voronoi diagrams generated using this method against the baseline, across multiple grid sizes and seed distributions.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "dynamic_quadtree_voronoi",
+        "Title": "Dynamic Quadtree Adaptation for Efficient Voronoi Diagram Generation",
+        "Experiment": "Utilize a quadtree data structure to dynamically adjust its subdivision strategy during Voronoi diagram generation based on real-time local seed density metrics. Modify the 'attribution' function to leverage this adaptive quadtree for efficient queries. Evaluate performance across various grid sizes and non-uniform seed distributions, focusing on execution time and adaptability improvements compared to baseline methods. Highlight scalability and efficiency, especially under non-uniform conditions.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "geometric_bisector_voronoi",
+        "Title": "Direct Bisector Calculation for Efficient Voronoi Diagram Generation",
+        "Experiment": "Introduce a preprocessing step in the 'PaneVoronoi' class to compute perpendicular bisectors for each pair of neighboring seed points. Modify the 'attribution' function to assign cells based on their location relative to these bisectors, with an optional final check against the nearest seed to ensure accuracy. Evaluate performance improvements by comparing execution times and accuracy against the baseline, with a focus on large grids and dense seed distributions.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "dynamic_programming_voronoi",
+        "Title": "Optimizing Voronoi Diagram Generation via Dynamic Programming",
+        "Experiment": "Introduce a memoization table in the 'PaneVoronoi' class to store partial results of computations for overlapping grid sections. Define strategies for dividing the grid into subproblems, such as tiling the grid into smaller blocks. Modify the 'attribution' function to first check the memoization table for existing results before performing new calculations. Evaluate the approach by comparing execution times and memory usage against the baseline for various grid sizes and seed distributions, ensuring the method balances computational efficiency with memory overhead.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "fractal_voronoi",
+        "Title": "Leveraging Fractal Geometry for Efficient Voronoi Diagram Generation",
+        "Experiment": "Introduce a preprocessing step to analyze the grid for self-similar patterns using simple heuristics or pattern recognition techniques inspired by fractal geometry. Modify the 'PaneVoronoi' class to include functions that detect and define these patterns. Adjust the 'attribution' function to compute Voronoi cells for identified regions and replicate these results for similar regions. Evaluate performance improvements by comparing execution times and accuracy against the baseline, focusing on large grids with repetitive patterns. Highlight efficiency gains and scenarios where fractal-based methods excel.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 10,
+        "novel": true
+    },
+    {
+        "Name": "heuristic_voronoi",
+        "Title": "Heuristic-Based Approaches for Efficient Voronoi Diagram Generation",
+        "Experiment": "Implement a heuristic function that approximates Voronoi cell assignment based on relative position to the seed points. This could include using bounding box or simple polygon approximations to create fast pre-categorization of points. Modify the 'attribution' function to initially use this heuristic to assign cells, and follow with a verification step that performs exact calculations only if the heuristic is uncertain or contradictory. Test the algorithm on large grids with varying seed distributions to evaluate the reduction in computational overhead and compare the accuracy and execution time against the baseline method.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "probabilistic_voronoi",
+        "Title": "Probabilistic Estimation for Efficient Voronoi Diagram Generation",
+        "Experiment": "Integrate a heuristic-based probabilistic approach within the 'PaneVoronoi' class to estimate the likely nearest seed for each grid cell. Implement probabilistic thresholds to quickly eliminate unlikely seed candidates, reducing reliance on exhaustive calculations. Modify the 'attribution' function to utilize these probabilistic estimates, focusing on precise calculations only where necessary. Evaluate the performance by comparing execution times and accuracy against the baseline on various grid sizes and seed distributions, highlighting improvements in computational efficiency and adaptability.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "gpu_acceleration_voronoi",
+        "Title": "Utilizing GPU Acceleration for Efficient Voronoi Diagram Generation",
+        "Experiment": "Implement a CUDA-based version of the 'attribution' function to offload distance calculations to the GPU. Modify the 'PaneVoronoi' class to include GPU memory management functions for data transfer between CPU and GPU. Benchmark performance improvements by comparing execution times on varying grid sizes and seed distributions with and without GPU acceleration. Ensure compatibility with both CPU-only and GPU-enabled environments, providing a fallback to the traditional CPU-based method.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": false
+    },
+    {
+        "Name": "bayesian_voronoi",
+        "Title": "Enhancing Voronoi Diagram Generation with Bayesian Modeling",
+        "Experiment": "Develop a Bayesian model within the 'PaneVoronoi' class using Gaussian priors for seed proximity. As each grid cell is processed, update the probability distribution of nearest seeds using Bayes' theorem, with a focus on Gaussian likelihoods for distance measurements. Modify the 'attribution' function to utilize this Bayesian framework for decision-making, updating beliefs about seed proximity in real-time. Evaluate performance by comparing execution times and accuracy against traditional methods, especially in scenarios with irregular seed distributions.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    }
+]

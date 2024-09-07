@@ -4,6 +4,8 @@ import json
 import os
 import pprint
 
+from dotenv import load_dotenv, find_dotenv
+_ = load_dotenv(find_dotenv())
 
 # gpt-4o
 openai_model = "gpt-4o-2024-08-06"
@@ -13,7 +15,7 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("
 deepseek_model = "deepseek-chat"
 deepseek_clinet = OpenAI(api_key=os.getenv('DEEPSEEK_API_KEY'), base_url=os.getenv('DEEPSEEK_BASE_URL'))
 
-base_dir = './generation_idea_template/small_object_attention/'
+base_dir = './generation_idea_template/plane_voronoi/'
 
 # generate ideas
 # 会自动保存 ideas 的结果到文件中，下次运行时会直接从文件中加载
