@@ -1,180 +1,181 @@
 [
     {
-        "Name": "dual_attention_integration",
-        "Title": "Enhancing Small Target Detection with Dual Attention Integration",
-        "Experiment": "Expand SEAttention to include a spatial attention mechanism. Implement spatial attention by adding two convolutional layers, followed by a softmax activation to produce a spatial attention map. Combine the spatial attention map with the SE channel attention output through element-wise multiplication. Evaluate performance improvements using metrics such as precision, recall, and F1-score on small target detection tasks. Compare these results to the baseline SEAttention model's performance.",
+        "Name": "spatial_channel_attention",
+        "Title": "Integrating Spatial Attention into SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by adding a spatial attention layer. Implement this by introducing a convolutional layer that outputs a spatial attention map with the same height and width as the input feature map. In the forward function, apply spatial attention by element-wise multiplying the spatial attention map with the input feature map, followed by the existing channel attention. Evaluate the model's effectiveness by comparing the output feature maps against those from the original SEAttention, using input tensors of varying scales and complexities. Performance can be assessed by visual inspection of feature maps and quantitative analysis using synthetic datasets if available.",
         "Interestingness": 8,
-        "Feasibility": 8,
-        "Novelty": 7
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
     },
     {
-        "Name": "temporal_attention_fusion",
-        "Title": "Advancing Small Target Detection via Temporal Attention Fusion",
-        "Experiment": "Integrate a temporal attention mechanism using LSTM or GRU layers into the SEAttention framework. This involves processing sequences of input frames to generate a temporal attention map. Combine the temporal map with the SEAttention channel output through element-wise multiplication. Evaluate improvements in detection metrics such as precision, recall, and F1-score on small target detection tasks, comparing against the baseline SEAttention model.",
+        "Name": "simulated_temporal_attention",
+        "Title": "Simulating Temporal Attention in SEAttention via Sliding Window for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by simulating temporal attention using a sliding window approach on spatial feature maps. Implement this by adding a mechanism that divides feature maps into non-overlapping subregions, treating each as a pseudo-temporal step, and applies attention across these regions using a shared attention mechanism. This should be integrated into the forward function following the channel attention. Evaluate by testing the model on datasets where small targets are embedded in varying spatial contexts within a single image, with performance assessed through quantitative metrics and visualization of feature map focus areas to compare against the original model.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "cross_channel_attention",
+        "Title": "Enhancing SEAttention with Cross-Channel Attention for Improved Small Target Detection",
+        "Experiment": "Extend SEAttention by integrating a cross-channel attention mechanism using a multi-head attention layer. This layer computes interactions between channels to create a comprehensive attention map that enhances feature recalibration. Modify the forward function to apply this cross-channel attention before the existing channel attention. Evaluate the model by comparing outputs with those from SEAttention and other modifications, using attention map visualizations and performance on synthetic datasets designed to test inter-channel dependencies.",
         "Interestingness": 9,
         "Feasibility": 7,
         "Novelty": 8,
         "novel": true
     },
     {
-        "Name": "self_supervised_pretraining",
-        "Title": "Improving Small Target Detection with Self-Supervised Pretraining",
-        "Experiment": "Introduce a self-supervised pretraining phase in SEAttention by tasking it to predict transformations like rotations or masked regions of input images. Implement a pretraining function that generates pseudo-labels from these transformations. Post-pretraining, fine-tune the model on small target detection, assessing performance through precision, recall, and F1-score. Compare results with baseline and enhanced models to demonstrate potential gains. Emphasize the method's applicability to varied detection challenges.",
+        "Name": "contextual_attention",
+        "Title": "Integrating Contextual Attention into SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by adding a global context block that pools the entire feature map into a context vector. Use this vector to inform a spatial attention recalibration mechanism, which is applied after channel attention. Implement this by adding a global context pooling layer and a recalibration module in the forward function. Evaluate the model's effectiveness by comparing feature maps and performance metrics on synthetic datasets designed to mimic scenarios with small target detection challenges.",
         "Interestingness": 9,
-        "Feasibility": 8,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "pyramid_attention",
+        "Title": "Integrating Pyramid Attention in SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by incorporating a pyramid pooling layer to generate multi-scale context features. Implement this by adding a pyramid pooling module that extracts pooled features at different scales. Apply a unified attention mechanism across these pooled features to recalibrate the feature map. Modify the forward function to include pyramid pooling and attention application. Evaluate the model's effectiveness by comparing detection performance on small and distributed targets, using visualization techniques and quantitative analysis on synthetic datasets.",
+        "Interestingness": 9,
+        "Feasibility": 7,
         "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "meta_attention",
+        "Title": "Enhancing SEAttention with Meta-Attention for Superior Small Target Detection",
+        "Experiment": "Extend SEAttention by incorporating a meta-attention mechanism. Implement this by introducing a secondary attention module, such as an additional SE block or a simple linear transformation, to refine the channel weights produced by the original SEAttention. Modify the forward function to apply this meta-attention after the original attention recalibration while maintaining computational efficiency. Evaluate the model's performance by comparing feature maps and conducting quantitative assessments on synthetic datasets, focusing on improvements in attention focus and detection performance on small targets.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 9,
         "novel": true
     },
     {
         "Name": "frequency_domain_attention",
-        "Title": "Enhancing Small Target Detection with Frequency Domain Attention",
-        "Experiment": "Implement a frequency transformation layer using DCT to convert spatial features into frequency features within the SEAttention framework. Develop a frequency attention module that applies attention mechanisms on these frequency-domain features. Integrate the frequency attention output with the spatial output through element-wise multiplication. Evaluate performance improvements using metrics such as precision, recall, and F1-score on small target detection tasks. Compare these results to the baseline SEAttention model's performance and other enhanced models.",
+        "Title": "Incorporating Frequency Domain Attention in SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by introducing a frequency domain attention mechanism. Implement this by adding a discrete cosine transform (DCT) block to convert spatial feature maps to the frequency domain, then apply attention using a straightforward weighting mechanism to emphasize important frequencies. Modify the forward function to seamlessly integrate these operations after the initial SEAttention. Evaluate the modified model by comparing its performance on detecting small targets with the baseline SEAttention model, using synthetic datasets and analyzing attention maps in both spatial and frequency domains.",
         "Interestingness": 9,
-        "Feasibility": 7,
+        "Feasibility": 6,
         "Novelty": 9,
         "novel": false
     },
     {
-        "Name": "multiscale_attention_integration",
-        "Title": "Enhancing Small Target Detection with Multi-Scale Attention Integration",
-        "Experiment": "Expand the SEAttention model to include a multi-scale attention mechanism. Implement this by adding parallel convolutional layers with varying kernel sizes to capture features at different scales. Each convolutional layer will produce a feature map, which will be combined with the SEAttention channel output through a weighted summation. Weights will be learned to emphasize informative scales. Modify the forward function to integrate these multi-scale features and evaluate performance improvements using precision, recall, and F1-score on small target detection tasks, comparing against the baseline SEAttention model.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 8,
-        "novel": false
-    },
-    {
-        "Name": "context_aware_attention",
-        "Title": "Context-Aware Attention for Enhanced Small Target Detection",
-        "Experiment": "Develop a context encoder module that extracts image-level features or scene categorization from the input data to produce a context vector. Modify the SEAttention model to integrate the context vector into its attention mechanism, enabling dynamic adjustment of attention weights based on contextual understanding. Implement this by adding a context encoder function that derives context from the input data and modifies the SEAttention forward function to incorporate this context modulation. Evaluate the model's performance on small target detection tasks in diverse scenarios, comparing results with the baseline SEAttention model and other enhanced models.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 9,
-        "novel": false
-    },
-    {
-        "Name": "adversarial_robustness_training",
-        "Title": "Improving Small Target Detection with Adversarial Robustness Training",
-        "Experiment": "Incorporate a generative adversarial network (GAN) to produce adversarial examples of input images that contain noise or perturbations. Modify the training loop of the SEAttention model to include these adversarial examples, allowing the model to learn robust feature representations. Implement the GAN as a separate module and integrate it with the SEAttention training pipeline. Evaluate detection performance under various noise conditions using metrics such as precision, recall, and F1-score, comparing results against the baseline SEAttention model.",
+        "Name": "multi_resolution_attention",
+        "Title": "Integrating Multi-Resolution Attention in SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by implementing a multi-resolution attention mechanism. Create two versions of the input feature map: the original and a single downsampled version. Apply the SEAttention block to each version, and then upsample the downsampled attention-weighted feature map back to the original resolution. Combine these maps to form a final attention map. Modify the forward function to include these steps while optimizing for computational efficiency. Evaluate the effectiveness by comparing detection performance on small targets using synthetic datasets, assessing both qualitative and quantitative improvements over the baseline SEAttention.",
         "Interestingness": 9,
         "Feasibility": 7,
         "Novelty": 9,
         "novel": true
     },
     {
-        "Name": "pyramid_attention_fusion",
-        "Title": "Enhancing Small Target Detection with Pyramid Attention Fusion",
-        "Experiment": "Develop a Pyramid Attention module that aggregates multi-scale features using pooling operations at different scales (e.g., global, regional, local). Simplify the fusion strategy by concatenating these pooled features with the SEAttention output, followed by a learnable fusion layer. Implement this by adding a Pyramid Attention module to the SEAttention class and modifying the forward function to incorporate hierarchical features. Evaluate performance using precision, recall, and F1-score on small target detection tasks, comparing against the baseline SEAttention model and other enhanced models.",
+        "Name": "adaptive_gating_attention",
+        "Title": "Introducing Adaptive Gating Mechanism in SEAttention for Context-Aware Small Target Detection",
+        "Experiment": "Extend SEAttention by adding a learnable gating mechanism that dynamically adjusts attention weights based on input complexity. Implement this by introducing a gating layer that takes input feature statistics (e.g., variance, mean) to modulate the balance between the original feature and the recalibrated attention feature. Modify the forward function to integrate this gating mechanism after the channel attention. Evaluate the model's performance by comparing it with the baseline SEAttention and other modifications, using synthetic datasets for small target detection and analyzing adaptive behavior through feature map visualizations.",
+        "Interestingness": 9,
+        "Feasibility": 6,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "contrastive_attention_enhancement",
+        "Title": "Enhancing SEAttention with Contrastive Learning for Improved Small Target Detection",
+        "Experiment": "Enhance SEAttention by integrating contrastive learning to improve spatial awareness. Implement this by creating pairs of feature maps: one with SEAttention applied and one without. Use a contrastive loss function to train the model to differentiate between these maps, emphasizing small target detection. Modify the forward function to support this training regime. Evaluate the model by comparing the contrastive loss and visualizing the attention focus on small targets, demonstrating improved spatial discrimination over the baseline model.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "scale_normalization_attention",
+        "Title": "Incorporating Scale Normalization in SEAttention for Robust Small Target Detection",
+        "Experiment": "Enhance SEAttention by introducing a scale normalization layer that preprocesses feature maps to emphasize smaller targets. Implement this using a learned scaling factor that dynamically adjusts feature intensities based on size relevance before applying SEAttention. Modify the forward function to include this normalization step, ensuring minimal computational overhead. Evaluate the model's effectiveness by comparing precision and recall metrics, alongside visualizations of attention focus on small targets, using synthetic datasets.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "hierarchical_attention",
+        "Title": "Integrating Hierarchical Attention in SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by incorporating a hierarchical attention mechanism to dynamically adjust focus on multi-scale feature representations. Implement this by adding a multi-scale feature extraction module that generates feature maps at two or three resolutions. Introduce an efficient attention mechanism that integrates these features hierarchically, focusing dynamically on global or local features based on input complexity. Modify the forward function to include these modules and the hierarchical attention mechanism. Evaluate the model's effectiveness by comparing detection performance on small targets using synthetic datasets, assessing both qualitative and quantitative improvements over the baseline SEAttention.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": false
+    },
+    {
+        "Name": "color_channel_fusion_attention",
+        "Title": "Enhancing SEAttention with Color Channel Fusion for Improved Small Target Detection",
+        "Experiment": "Extend SEAttention by implementing a color channel fusion mechanism. Add a preprocessing step that applies a shared attention mechanism to the R, G, and B channels, followed by a weighted fusion of these channels to create a comprehensive feature map. Integrate this fused feature map into the existing SEAttention architecture. Evaluate the model's effectiveness by comparing detection performance on synthetic datasets designed with varying color contrasts and subtle variations, using quantitative metrics such as precision and recall, and qualitative analysis of attention map focus.",
         "Interestingness": 8,
-        "Feasibility": 8,
-        "Novelty": 8,
-        "novel": false
-    },
-    {
-        "Name": "dynamic_attention_selection",
-        "Title": "Improving Small Target Detection with Dynamic Attention Selection",
-        "Experiment": "Implement a dynamic attention mechanism that selects between spatial and channel attentions based on input characteristics. Develop a decision layer that analyzes input features and outputs a preference score for each attention type. Modify the SEAttention class to incorporate spatial attention. Use the decision layer to dynamically apply spatial or channel attention. Evaluate the model's performance on small target detection tasks by analyzing precision, recall, and F1-score, comparing against the baseline SEAttention model and other enhanced models.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 8,
-        "novel": true
-    },
-    {
-        "Name": "meta_learning_integration",
-        "Title": "Enhancing Small Target Detection with Meta-Learning Integration",
-        "Experiment": "Integrate a meta-learning approach, such as Model-Agnostic Meta-Learning (MAML), into the SEAttention model. Implement a meta-training loop where the model learns a general parameter initialization by simulating small target detection tasks. Modify the training function to include inner-loop updates for task adaptation and outer-loop updates for meta-learning. Evaluate the model's ability to adapt by testing on unseen small target detection tasks and measuring performance metrics such as precision, recall, and F1-score. Conduct comparisons with the baseline SEAttention model and other enhanced models to validate improvements.",
-        "Interestingness": 10,
         "Feasibility": 7,
         "Novelty": 9,
         "novel": true
     },
     {
-        "Name": "contrastive_learning_integration",
-        "Title": "Enhancing Small Target Detection with Contrastive Learning Integration",
-        "Experiment": "Integrate a contrastive learning module into the SEAttention framework. Develop functions to generate contrastive pairs from input data, either through augmentations or synthetic data creation. Ensure these pairs highlight small target presence or absence. Modify the training loop to include a contrastive loss alongside the standard detection loss. Evaluate the performance improvements using metrics such as precision, recall, and F1-score on small target detection tasks, comparing results with the baseline SEAttention model and other enhanced models. Emphasize robustness in varied detection scenarios.",
+        "Name": "denoising_attention",
+        "Title": "Incorporating Denoising Autoencoder within SEAttention for Robust Small Target Detection",
+        "Experiment": "Integrate a lightweight denoising autoencoder within the SEAttention framework. Implement an encoder-decoder structure focused on feature compression and noise reduction. Modify the forward function to pass input through the autoencoder before applying channel attention. Optimize the autoencoder's parameters using a transfer learning approach, ensuring it is tailored for small target detection. Evaluate performance by comparing detection accuracy and attention map clarity on small targets with and without the denoising mechanism, using synthetic datasets.",
         "Interestingness": 9,
         "Feasibility": 8,
         "Novelty": 9,
         "novel": true
     },
     {
-        "Name": "dynamic_data_transformation",
-        "Title": "Enhancing Small Target Detection with Dynamic Data Transformation",
-        "Experiment": "Develop a dynamic data transformation module that learns to apply optimal transformations to input data to improve small target visibility. Integrate this module into the SEAttention model by preprocessing input data before the attention mechanism. Evaluate the model's performance by comparing precision, recall, and F1-score on small target detection tasks with and without the transformation module. Analyze the effectiveness of different transformations in enhancing small target detection.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 9,
-        "novel": true
-    },
-    {
-        "Name": "optimized_ensemble_attention",
-        "Title": "Enhancing Small Target Detection with Optimized Ensemble Attention",
-        "Experiment": "Implement an ensemble of SEAttention models, each trained with different configurations such as varied data augmentations or initializations. Apply a specific ensemble strategy like boosting, where models are trained sequentially with a focus on the errors of previous models. Develop a mechanism to optimize the weights assigned to each model's output, such as using a meta-learning approach. Evaluate the ensemble's performance on small target detection tasks using precision, recall, and F1-score, comparing against individual SEAttention models and other enhanced models.",
-        "Interestingness": 8,
-        "Feasibility": 8,
-        "Novelty": 8,
-        "novel": true
-    },
-    {
-        "Name": "pruned_attention",
-        "Title": "Compact and Efficient Small Target Detection with Pruned Attention",
-        "Experiment": "Implement a pruning mechanism within the SEAttention framework to iteratively reduce the model size and computational cost. Develop pruning functions that focus on weight and channel pruning, potentially using magnitude or learning-based strategies. Modify the training loop to incorporate pruning and subsequent fine-tuning to recover any potential loss in performance. Evaluate the model's detection performance and computational efficiency using metrics such as precision, recall, F1-score, FLOPs, model size, and inference time, comparing against the baseline SEAttention model. Select the pruning method based on the model's characteristics to optimize efficiency gains.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 8,
-        "novel": true
-    },
-    {
-        "Name": "hierarchical_attention_scaling",
-        "Title": "Improving Small Target Detection with Hierarchical Attention Scaling",
-        "Experiment": "Modify the SEAttention class to incorporate a dynamic scaling factor for attention weights. Implement a new function that computes scaling factors based on the spatial dimensions of feature maps. Integrate this function into the forward pass of SEAttention to adjust attention weights dynamically. Evaluate performance using precision, recall, and F1-score on small target detection tasks, comparing against the baseline SEAttention model and other enhanced models to demonstrate improvements in detecting small targets.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 9,
-        "novel": true
-    },
-    {
-        "Name": "adaptive_complexity_attention",
-        "Title": "Adaptive Complexity Attention for Robust Small Target Detection",
-        "Experiment": "Incorporate a complexity assessment module within the SEAttention framework. Implement a function that calculates a complexity score using simple features like pixel intensity variance or entropy from input data. Modify the forward function of SEAttention to adjust the attention weights using this complexity score. Evaluate the model's performance across small target detection tasks with varying image complexities, using metrics such as precision, recall, and F1-score. Compare the results against the baseline SEAttention model to demonstrate improvements in robustness and adaptability.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 9,
-        "novel": true
-    },
-    {
-        "Name": "uncertainty_guided_attention",
-        "Title": "Enhancing Small Target Detection with Uncertainty-Guided Attention",
-        "Experiment": "Integrate an uncertainty estimation module within the SEAttention framework. Develop functions to compute uncertainty scores for different regions in the input feature map, using methods such as Monte Carlo Dropout or entropy-based measures. Modify the SEAttention class to incorporate these uncertainty scores into the attention mechanism, adjusting attention weights based on uncertainty. Evaluate the model's performance on small target detection tasks using metrics such as precision, recall, and F1-score, while also analyzing the uncertainty estimation's impact on detection accuracy. Compare results with the baseline SEAttention model and other enhanced models.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 9,
-        "novel": true
-    },
-    {
-        "Name": "quality_adaptive_attention",
-        "Title": "Enhancing Small Target Detection with Quality-Adaptive Attention",
-        "Experiment": "Develop a quality assessment module that computes a quality score for each input feature map using metrics like noise level or sharpness. Integrate this module into the SEAttention class, modifying the attention weights based on quality scores. Implement this by adding a quality assessment function and updating the forward pass of SEAttention to apply adaptive modulation of attention weights. Evaluate performance improvements using precision, recall, and F1-score on small target detection tasks, and compare results with the baseline SEAttention model and other enhanced models.",
-        "Interestingness": 9,
-        "Feasibility": 8,
-        "Novelty": 9,
-        "novel": true
-    },
-    {
-        "Name": "auxiliary_task_guided_attention",
-        "Title": "Enhancing Small Target Detection with Auxiliary Task Guided Attention",
-        "Experiment": "Extend the SEAttention model by integrating a multi-task learning framework with a focus on object classification as an auxiliary task. Implement shared layers for feature extraction that serve both the detection and classification tasks. Modify the SEAttention's forward pass to incorporate gradients from both tasks, optimizing attention weights for improved detection. Evaluate the model's performance on small target detection using precision, recall, and F1-score, comparing results with the baseline SEAttention model to demonstrate the effectiveness of this approach.",
+        "Name": "frequency_modulation_attention",
+        "Title": "Incorporating Frequency Modulation in SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by adding a frequency modulation mechanism using a learned frequency filter. Implement this by applying a simplified spectral decomposition, such as a series of convolutional layers configured to approximate frequency domain filtering, directly to the spatial feature maps. Use these layers to emphasize frequencies associated with small targets. Integrate the modulated features with the original feature map through element-wise addition or multiplication. Modify the forward function to include these components. Evaluate the model's performance by comparing detection metrics with the baseline SEAttention, using synthetic datasets and visual analysis of frequency-enhanced attention maps.",
         "Interestingness": 9,
         "Feasibility": 8,
         "Novelty": 9,
         "novel": false
     },
     {
-        "Name": "task_adaptive_attention",
-        "Title": "Enhancing Small Target Detection with Task-Adaptive Attention",
-        "Experiment": "Develop a meta-attention module that infers a task descriptor from input data characteristics. Integrate this module within the SEAttention framework to modulate its parameters dynamically. Implement functions to extract task descriptors and modify SEAttention weights based on these descriptors. Evaluate the model's adaptability and performance across diverse small target detection tasks using precision, recall, and F1-score, comparing its performance against the baseline SEAttention model and other enhanced models.",
+        "Name": "semantic_attention",
+        "Title": "Incorporating Semantic Attention in SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by integrating a semantic attention module that utilizes a simple pooling strategy to identify salient semantic features. Implement this by adding a global max pooling layer to extract prominent features, followed by a learnable attention layer that assigns weights based on semantic relevance. Modify the forward function to incorporate this semantic attention after the channel attention. Evaluate the model's effectiveness by comparing detection performance on synthetic datasets, focusing on improvements in semantic understanding and detection accuracy.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "internal_attention_bootstrapping",
+        "Title": "Internal Attention Bootstrapping for Enhanced SEAttention in Small Target Detection",
+        "Experiment": "Implement an internal attention bootstrapping mechanism where SEAttention periodically saves and analyzes its attention distribution at various training stages. Modify the training routine to adjust current attention maps to better align with or improve upon these previously saved distributions, focusing on enhancing small target detection capabilities. Evaluate attention map alignment and detection performance improvements over baseline SEAttention using synthetic datasets.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8,
+        "novel": true
+    },
+    {
+        "Name": "simplified_graph_attention",
+        "Title": "Integrating Simplified Graph Neural Networks in SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by incorporating a simplified Graph Neural Network (GNN) layer. Treat feature maps as graphs with nodes representing spatial locations and edges encoding basic spatial relationships or proximity. Implement a lightweight graph convolution technique to process these graphs, focusing on essential spatial dependencies. Integrate this GNN layer after the channel attention stage. Modify the forward function to include basic graph construction and processing. Evaluate the model's performance on synthetic datasets by comparing detection accuracy and attention focus against baseline SEAttention, with emphasis on capturing spatial dependencies efficiently.",
         "Interestingness": 9,
         "Feasibility": 7,
+        "Novelty": 10,
+        "novel": true
+    },
+    {
+        "Name": "geometric_transformation_attention",
+        "Title": "Integrating Geometric Transformation-Aware Attention in SEAttention for Enhanced Small Target Detection",
+        "Experiment": "Extend SEAttention by adding a lightweight geometric transformation layer that applies controlled transformations (e.g., small rotations, translations) to the input feature map. Integrate a transformation-aware attention mechanism that recalibrates feature maps based on invariant patterns across these transformations. Modify the forward function to include these geometric transformations and subsequent attention recalibration. Evaluate the model's effectiveness by comparing detection accuracy and visual focus of attention maps on synthetic datasets, particularly observing improvements in small target detection.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9,
+        "novel": true
+    },
+    {
+        "Name": "sparsity_attention",
+        "Title": "Enhancing SEAttention with Sparsity-Aware Attention for Improved Small Target Detection",
+        "Experiment": "Extend SEAttention by incorporating a sparsity-promoting transformation within the attention mechanism. Implement a sparse encoding step using a learned thresholding layer, applied to the input feature maps before the existing attention recalibration. This thresholding layer will dynamically adjust based on the input characteristics to promote sparsity efficiently. Modify the forward function to include this sparsity transformation and evaluate its impact by comparing detection performance on synthetic datasets with baseline SEAttention. Use visualization of attention maps to assess enhanced focus on critical features and improved noise suppression.",
+        "Interestingness": 9,
+        "Feasibility": 8,
         "Novelty": 9,
         "novel": true
     }
