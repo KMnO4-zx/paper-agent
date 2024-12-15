@@ -1,0 +1,162 @@
+[
+    {
+        "Name": "multi_scale_coordatt",
+        "Title": "Incorporating Multi-scale Features in Coordinate Attention Module",
+        "Experiment": "Add parallel convolutional branches with kernel sizes 1x1, 3x3, and 5x5 to `CoordAtt` to capture multi-scale features. Each branch should have its own convolutional layer followed by batch normalization and activation. Concatenate the outputs of these branches before combining with the original coordinate attention features. Modify the `forward` method to integrate these multi-scale features before applying attention weights. Evaluate the enhancement in feature representation by testing on a small benchmark dataset and comparing the modified module's performance to the original, while also monitoring computational overhead.",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8
+    },
+    {
+        "Name": "depthwise_coordatt",
+        "Title": "Enhancing Coordinate Attention with Depthwise Separable Convolutions for Efficiency",
+        "Experiment": "Modify the `CoordAtt` class to replace standard convolutions with depthwise separable convolutions. Implement a new class `DepthwiseSeparableConv` and use it to replace `conv1`, `conv_h`, and `conv_w`. Each depthwise separable convolution consists of a depthwise convolution followed by a pointwise convolution. Evaluate the efficiency improvements by measuring parameter count and computational time, and compare the accuracy on a small benchmark dataset against the original implementation.",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7
+    },
+    {
+        "Name": "se_coordatt",
+        "Title": "Integrating Squeeze-and-Excitation with Coordinate Attention for Enhanced Feature Modulation",
+        "Experiment": "Integrate a Squeeze-and-Excitation (SE) block within the CoordAtt module. Before applying the coordinate attention, add an SE block that squeezes the spatial dimensions and excites channels based on global average pooling. Modify the forward method to include this SE block before the existing coordinate attention operations. Evaluate the effectiveness by testing on a small benchmark dataset, comparing feature representation and attention quality to the original CoordAtt, and analyzing the computational overhead and parameter count.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "temporal_coordatt",
+        "Title": "Incorporating Temporal Attention in Coordinate Attention Module for Sequence Processing",
+        "Experiment": "Add a lightweight temporal attention mechanism to the CoordAtt module. Introduce 1D convolutions that operate on temporal sequences derived from input feature maps. Modify the forward method to compute temporal attention weights and integrate them with spatial attention. Evaluate the effectiveness on synthetic sequential data to assess improvements in temporal feature representations, while monitoring any additional computational cost incurred.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "channel_mix_coordatt",
+        "Title": "Enhancing Coordinate Attention with Channel Mixing for Optimized Feature Utilization",
+        "Experiment": "Introduce a Channel Mixing Block (CMB) within the CoordAtt module. Implement grouped convolutions in the CMB to capture channel-wise dependencies efficiently. Modify the CoordAtt class to include a new CMB after the initial convolutional layers. Evaluate the impact of channel mixing on feature representation by testing on a small benchmark dataset, comparing the performance and computational efficiency against the original CoordAtt and other variants.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "content_adaptive_coordatt",
+        "Title": "Content-Adaptive Attention in Coordinate Attention Module for Enhanced Feature Discrimination",
+        "Experiment": "Modify the `CoordAtt` class to incorporate a content-adaptive attention mechanism. Implement a self-attention-like operation where attention weights are computed based on the cosine similarity between features. Integrate this mechanism before the existing coordinate attention operations, allowing attention weights to be modulated based on input content. Evaluate the benefits of this approach by assessing feature representation quality and comparing performance on a small benchmark dataset against the original CoordAtt. Monitor computational efficiency and parameter count to ensure the approach remains lightweight.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "hierarchical_coordatt",
+        "Title": "Hierarchical Coordinate Attention for Enhanced Feature Representation",
+        "Experiment": "Implement a hierarchical structure within the CoordAtt module, using two sequential layers. The first layer applies channel-wise attention with 1x1 convolutions, focusing on channel dependencies. The second layer implements spatial attention with adaptive pooling and convolutions to capture spatial dependencies. Adjust the forward method to process these layers in sequence. Evaluate the enhanced attention mechanism by testing on a small benchmark dataset, comparing improvements in feature representation and performance to the original CoordAtt while monitoring computational efficiency.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "dynamic_complexity_coordatt",
+        "Title": "Dynamic Complexity Adjustment in Coordinate Attention for Adaptive Feature Processing",
+        "Experiment": "Enhance the `CoordAtt` module by integrating a dynamic complexity adjustment mechanism. Use a simple heuristic based on feature map variance to determine complexity. Route the input through either a lightweight or complex processing path: a basic path for low variance features and an enhanced path for high variance features. Modify the forward method to include this decision mechanism and dynamically adjust processing. Evaluate the module's adaptability on a small benchmark dataset, assessing improvements in feature discrimination and computational efficiency over the original and other variants.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "edge_aware_coordatt",
+        "Title": "Incorporating Edge-Aware Attention in Coordinate Attention Module for Enhanced Feature Discrimination",
+        "Experiment": "Integrate a lightweight edge detection layer, such as a Sobel filter or small trainable convolutional layer, within the CoordAtt module. Modify the forward method to compute edge maps and integrate them by modulating the attention weights. Evaluate the impact on feature representation by testing on a small benchmark dataset, comparing performance to the original CoordAtt, and monitoring computational efficiency.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "freq_domain_coordatt",
+        "Title": "Incorporating Frequency Domain Analysis in Coordinate Attention for Enhanced Feature Discrimination",
+        "Experiment": "Integrate a frequency domain analysis step within the CoordAtt module. Implement a function to perform Fast Fourier Transform (FFT) on the input feature maps, focusing on extracting significant frequency components. Use these components to modulate the attention weights in the CoordAtt module. Modify the forward method to incorporate this frequency domain information before applying the spatial attention mechanism. Evaluate the impact on feature representation using metrics such as accuracy, feature representation quality, and computational efficiency by testing on a small benchmark dataset. Compare the performance to the original CoordAtt and other variants.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 10
+    },
+    {
+        "Name": "probabilistic_coordatt",
+        "Title": "Incorporating Probabilistic Attention in Coordinate Attention for Uncertainty Modeling",
+        "Experiment": "Modify the CoordAtt module to introduce a probabilistic attention mechanism. Implement a stochastic gating mechanism where attention weights are sampled from a Gaussian distribution with learnable parameters (mean and variance). Adjust the forward method to compute these probabilistic attention weights and integrate them into the feature modulation process. Evaluate the impact on feature representation and robustness by testing on a small benchmark dataset, comparing the performance to the original CoordAtt and other variants, and analyzing the uncertainty estimates.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 10
+    },
+    {
+        "Name": "adaptive_coordatt",
+        "Title": "Introducing Adaptive Attention in Coordinate Attention for Dynamic Feature Processing",
+        "Experiment": "Implement a simple heuristic-based mechanism within the CoordAtt module to dynamically adjust attention parameters based on input feature map statistics such as variance or entropy. Modify the forward method to incorporate this mechanism, allowing it to adaptively configure the attention strategy. Evaluate the adaptability and performance on a small benchmark dataset, comparing it with the original CoordAtt and other versions, focusing on accuracy, feature representation quality, and computational efficiency. The heuristic could be a rule-based system or a lightweight decision tree.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "geo_transform_coordatt",
+        "Title": "Incorporating Geometric Transformations in Coordinate Attention for Robust Feature Alignment",
+        "Experiment": "Introduce a lightweight transformation network within the CoordAtt module, using a small convolutional layer followed by a fully connected layer to predict affine transformation parameters. Use these parameters to warp the input feature maps via spatial transformations before applying coordinate attention. Modify the forward method accordingly, and evaluate effectiveness on datasets with geometric variations, comparing feature representation, performance, and computational efficiency against the original CoordAtt and other variants. Ensure the transformation network is efficient to maintain minimal overhead.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "nonlocal_coordatt",
+        "Title": "Incorporating Non-Local Attention in Coordinate Attention for Enhanced Long-Range Feature Dependencies",
+        "Experiment": "Introduce a lightweight non-local attention mechanism within the CoordAtt module. Implement a simplified version of the non-local block that captures global context effectively. Modify the forward method to first compute these non-local attention features and integrate them with the existing coordinate attention features before applying the final attention weights. Evaluate performance on a small benchmark dataset, focusing on improvements in feature representation and capturing long-range dependencies. Compare against the original CoordAtt and other variants to assess computational efficiency and accuracy improvements.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "dual_domain_coordatt",
+        "Title": "Integrating Dual-Domain Attention in Coordinate Attention for Enhanced Feature Representation",
+        "Experiment": "Modify the CoordAtt module to incorporate both spatial and frequency domain attention mechanisms. Perform a Fast Fourier Transform (FFT) on the input feature maps to capture frequency domain information. Compute attention weights separately for spatial and frequency domains, then merge them using a simple weighted sum or concatenation followed by a linear transformation. Adjust the forward method to include these steps, and evaluate the module's performance on a small benchmark dataset, comparing improvements in feature representation, accuracy, and computational efficiency against the original CoordAtt and other variants.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 10
+    },
+    {
+        "Name": "deformable_pooling_coordatt",
+        "Title": "Enhancing Coordinate Attention with Deformable Pooling for Dynamic Spatial Feature Capture",
+        "Experiment": "Replace the `nn.AdaptiveAvgPool2d` operations in the CoordAtt module with a custom deformable pooling layer. Implement learnable offsets for pooling regions that adjust based on input features, allowing the pooling operation to capture more complex spatial hierarchies. Ensure the deformable pooling layer is lightweight to maintain computational efficiency. Evaluate the modified CoordAtt's performance on a small benchmark dataset, comparing improvements in feature representation quality and accuracy against the original implementation.",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "global_context_coordatt",
+        "Title": "Incorporating Global Context in Coordinate Attention for Enhanced Feature Representation",
+        "Experiment": "Introduce a Global Context Block within the CoordAtt module. Implement global average pooling on the input feature map to extract global context vectors. Use these vectors to modulate the attention weights by integrating them with the existing coordinate attention features. Modify the forward method to include this global context before applying the spatial attention mechanism. Evaluate the impact on feature representation and performance using a small benchmark dataset, comparing the results with the original CoordAtt and other variants.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "sparse_coordatt",
+        "Title": "Incorporating Sparsity-Inducing Regularization in Coordinate Attention for Efficient Feature Representation",
+        "Experiment": "Integrate an L1 regularization term into the training process of the CoordAtt module to induce sparsity in the feature maps. Modify the loss function to include this L1 penalty, encouraging sparsity in the output of the initial convolutional layers. Evaluate the impact on feature representation quality and computational efficiency by testing on a small benchmark dataset. Compare the results in terms of accuracy, feature discrimination, and computational overhead with the original CoordAtt and other variants.",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "shared_params_coordatt",
+        "Title": "Incorporating Shared Learnable Parameters in Coordinate Attention for Compact Feature Representation",
+        "Experiment": "Modify the CoordAtt module to introduce a shared parameter block accessible to multiple network components, such as convolutional layers and activation functions. Implement this shared parameter block as a separate module with learnable parameters. Integrate it into the CoordAtt module by adjusting the conv1, conv_h, and conv_w layers to utilize these shared parameters. Evaluate the parameter count reduction and computational efficiency by testing on a small benchmark dataset, comparing performance and representation quality with the original CoordAtt and other variants.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "cross_dim_coordatt",
+        "Title": "Incorporating Cross-Dimensional Attention in Coordinate Attention for Enhanced Spatial Interactions",
+        "Experiment": "Modify the CoordAtt class to include a cross-dimensional attention mechanism. Implement an attention mechanism that captures interactions across both height and width dimensions simultaneously using a form of matrix multiplication. Adjust the forward method to compute these attention weights and integrate them with the existing coordinate attention features before applying them to the input. Evaluate the impact on feature representation by testing on a small benchmark dataset, comparing performance and computational efficiency against the original CoordAtt and other variants.",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    }
+]
