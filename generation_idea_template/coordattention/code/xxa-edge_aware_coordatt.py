@@ -1,18 +1,16 @@
 """
-Modify the `CoordAtt` class to incorporate a content-adaptive attention mechanism
-Implement a self-attention-like operation where attention weights are computed based on the cosine similarity between features
-Integrate this mechanism before the existing coordinate attention operations, allowing attention weights to be modulated based on input content
-Evaluate the benefits of this approach by assessing feature representation quality and comparing performance on a small benchmark dataset against the original CoordAtt
-Monitor computational efficiency and parameter count to ensure the approach remains lightweight
+Integrate a lightweight edge detection layer, such as a Sobel filter or small trainable convolutional layer, within the CoordAtt module
+Modify the forward method to compute edge maps and integrate them by modulating the attention weights
+Evaluate the impact on feature representation by testing on a small benchmark dataset, comparing performance to the original CoordAtt, and monitoring computational efficiency
 
 """
 
-# Modified code
+# xxa
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import torchvision.transforms as transforms
 
 class h_sigmoid(nn.Module):
     def __init__(self, inplace=True):
@@ -47,32 +45,26 @@ class CoordAtt(nn.Module):
         self.conv_h = nn.Conv2d(mip, inp, kernel_size=1, stride=1, padding=0)
         self.conv_w = nn.Conv2d(mip, inp, kernel_size=1, stride=1, padding=0)
 
-        # Self-attention-like mechanism using cosine similarity
-        self.query_conv = nn.Conv2d(inp, inp // reduction, kernel_size=1)
-        self.key_conv = nn.Conv2d(inp, inp // reduction, kernel_size=1)
-        self.value_conv = nn.Conv2d(inp, inp, kernel_size=1)
-        self.softmax = nn.Softmax(dim=-1)
+        # Edge detection using Sobel filters
+        self.sobel_x = nn.Conv2d(inp, 1, kernel_size=3, stride=1, padding=1, bias=False)
+        self.sobel_y = nn.Conv2d(inp, 1, kernel_size=3, stride=1, padding=1, bias=False)
+        sobel_kernel_x = torch.tensor([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=torch.float32).expand(1, inp, 3, 3)
+        sobel_kernel_y = torch.tensor([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=torch.float32).expand(1, inp, 3, 3)
+        self.sobel_x.weight = nn.Parameter(sobel_kernel_x, requires_grad=False)
+        self.sobel_y.weight = nn.Parameter(sobel_kernel_y, requires_grad=False)
 
     def forward(self, x):
         identity = x
 
-        # Compute cosine similarity based attention
+        # Compute edge maps
+        edge_x = self.sobel_x(x)
+        edge_y = self.sobel_y(x)
+        edge_map = torch.sqrt(edge_x ** 2 + edge_y ** 2)
+        edge_map = edge_map.sigmoid()  # Normalize edge map
+
         n, c, h, w = x.size()
-        query = self.query_conv(x)
-        key = self.key_conv(x)
-        value = self.value_conv(x)
-
-        query = query.view(n, -1, h * w)
-        key = key.view(n, -1, h * w)
-        value = value.view(n, -1, h * w)
-
-        attention = torch.bmm(query.permute(0, 2, 1), key)
-        attention = self.softmax(attention / (c ** 0.5))
-        out_attention = torch.bmm(value, attention).view(n, c, h, w)
-
-        # Existing coordinate attention operations
-        x_h = self.pool_h(out_attention)
-        x_w = self.pool_w(out_attention).permute(0, 1, 3, 2)
+        x_h = self.pool_h(x)
+        x_w = self.pool_w(x).permute(0, 1, 3, 2)
 
         y = torch.cat([x_h, x_w], dim=2)
         y = self.conv1(y)
@@ -85,7 +77,8 @@ class CoordAtt(nn.Module):
         a_h = self.conv_h(x_h).sigmoid()
         a_w = self.conv_w(x_w).sigmoid()
 
-        out = identity * a_w * a_h
+        # Integrate edge map by modulating attention
+        out = identity * a_w * a_h * edge_map
 
         return out
 

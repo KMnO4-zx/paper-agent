@@ -1,0 +1,162 @@
+[
+    {
+        "Name": "multi_scale_coordatt",
+        "Title": "在坐标注意力模块中融入多尺度特征",
+        "Experiment": "在`CoordAtt`中添加并行的卷积分支，使用1x1、3x3和5x5的卷积核来捕捉多尺度特征。每个分支应有自己的卷积层，随后是批量归一化和激活函数。将这些分支的输出连接起来，然后与原始的坐标注意力特征结合。修改`forward`方法以在应用注意力权重之前集成这些多尺度特征。通过在一个小型基准数据集上测试并比较修改后的模块与原始模块的性能，评估特征表示的增强效果，同时监控计算开销。",
+        "Interestingness": 8,
+        "Feasibility": 7,
+        "Novelty": 8
+    },
+    {
+        "Name": "depthwise_coordatt",
+        "Title": "通过深度可分离卷积增强坐标注意力的效率",
+        "Experiment": "修改`CoordAtt`类，将标准卷积替换为深度可分离卷积。实现一个新的类`DepthwiseSeparableConv`，并用它替换`conv1`、`conv_h`和`conv_w`。每个深度可分离卷积由深度卷积和逐点卷积组成。通过测量参数数量和计算时间来评估效率改进，并在一个小型基准数据集上比较准确性，与原始实现进行对比。",
+        "Interestingness": 8,
+        "Feasibility": 9,
+        "Novelty": 7
+    },
+    {
+        "Name": "se_coordatt",
+        "Title": "将压缩与激励与坐标注意力结合以增强特征调制",
+        "Experiment": "在CoordAtt模块中集成一个压缩与激励（SE）块。在应用坐标注意力之前，添加一个SE块，该块通过全局平均池化压缩空间维度，并根据全局平均池化激励通道。修改forward方法以在现有坐标注意力操作之前包含此SE块。通过在一个小型基准数据集上测试，比较特征表示和注意力质量与原始CoordAtt的差异，并分析计算开销和参数数量，评估其有效性。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "temporal_coordatt",
+        "Title": "在坐标注意力模块中融入时间注意力以进行序列处理",
+        "Experiment": "在CoordAtt模块中添加一个轻量级的时间注意力机制。引入对从输入特征图中提取的时间序列进行操作的1D卷积。修改forward方法以计算时间注意力权重，并将其与空间注意力集成。通过在合成序列数据上评估，评估时间特征表示的改进效果，同时监控任何额外的计算成本。",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "channel_mix_coordatt",
+        "Title": "通过通道混合增强坐标注意力以优化特征利用",
+        "Experiment": "在CoordAtt模块中引入一个通道混合块（CMB）。在CMB中实现分组卷积以高效捕捉通道间的依赖关系。修改CoordAtt类以在初始卷积层后包含一个新的CMB。通过在一个小型基准数据集上测试，比较性能和计算效率与原始CoordAtt和其他变体的差异，评估通道混合对特征表示的影响。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "content_adaptive_coordatt",
+        "Title": "在坐标注意力模块中融入内容自适应注意力以增强特征区分",
+        "Experiment": "修改`CoordAtt`类，以结合内容自适应注意力机制。实现一个类似自注意力的操作，其中注意力权重基于特征之间的余弦相似度计算。在现有坐标注意力操作之前集成此机制，使注意力权重能够根据输入内容进行调制。通过评估特征表示质量，并在一个小型基准数据集上比较与原始CoordAtt的性能，评估此方法的益处。监控计算效率和参数数量，以确保该方法保持轻量级。",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "hierarchical_coordatt",
+        "Title": "分层坐标注意力以增强特征表示",
+        "Experiment": "在CoordAtt模块中实现一个分层结构，使用两个顺序层。第一层应用1x1卷积的通道注意力，专注于通道依赖关系。第二层实现自适应池化和卷积的空间注意力，以捕捉空间依赖关系。调整forward方法以顺序处理这些层。通过在一个小型基准数据集上测试，比较特征表示的改进效果和性能与原始CoordAtt的差异，同时监控计算效率，评估增强的注意力机制。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "dynamic_complexity_coordatt",
+        "Title": "在坐标注意力中引入动态复杂度调整以适应特征处理",
+        "Experiment": "通过在`CoordAtt`模块中集成动态复杂度调整机制来增强它。使用基于特征图方差的简单启发式方法来确定复杂度。根据输入特征图的方差，将输入路由到轻量级或复杂处理路径：低方差特征的基本路径和高方差特征的增强路径。修改forward方法以包含此决策机制，并动态调整处理。通过在一个小型基准数据集上评估模块的适应性，评估特征区分和计算效率的改进效果，与原始和其他变体进行比较。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "edge_aware_coordatt",
+        "Title": "在坐标注意力模块中融入边缘感知注意力以增强特征区分",
+        "Experiment": "在CoordAtt模块中集成一个轻量级的边缘检测层，如Sobel滤波器或小型可训练卷积层。修改forward方法以计算边缘图，并通过调制注意力权重将其集成。通过在一个小型基准数据集上测试，比较性能与原始CoordAtt的差异，并监控计算效率，评估对特征表示的影响。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "freq_domain_coordatt",
+        "Title": "在坐标注意力中融入频域分析以增强特征区分",
+        "Experiment": "在CoordAtt模块中集成一个频域分析步骤。实现一个函数对输入特征图执行快速傅里叶变换（FFT），专注于提取显著的频率成分。使用这些成分来调制CoordAtt模块中的注意力权重。修改forward方法以在应用空间注意力机制之前包含此频域信息。通过在一个小型基准数据集上测试，使用准确性、特征表示质量和计算效率等指标评估对特征表示的影响。比较性能与原始CoordAtt和其他变体的差异。",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 10
+    },
+    {
+        "Name": "probabilistic_coordatt",
+        "Title": "在坐标注意力中融入概率注意力以进行不确定性建模",
+        "Experiment": "修改CoordAtt模块，引入概率注意力机制。实现一个随机门控机制，其中注意力权重从具有可学习参数（均值和方差）的高斯分布中采样。调整forward方法以计算这些概率注意力权重，并将其集成到特征调制过程中。通过在一个小型基准数据集上测试，比较性能与原始CoordAtt和其他变体的差异，并分析不确定性估计，评估对特征表示和鲁棒性的影响。",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 10
+    },
+    {
+        "Name": "adaptive_coordatt",
+        "Title": "在坐标注意力中引入自适应注意力以进行动态特征处理",
+        "Experiment": "在CoordAtt模块中实现一个基于输入特征图统计（如方差或熵）的简单启发式机制，以动态调整注意力参数。修改forward方法以包含此机制，使其能够自适应地配置注意力策略。通过在一个小型基准数据集上评估其适应性和性能，比较与原始CoordAtt和其他版本的差异，重点关注准确性、特征表示质量和计算效率。启发式方法可以是基于规则的系统或轻量级决策树。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "geo_transform_coordatt",
+        "Title": "在坐标注意力中融入几何变换以增强特征对齐",
+        "Experiment": "在CoordAtt模块中引入一个轻量级的变换网络，使用小型卷积层和全连接层来预测仿射变换参数。使用这些参数通过空间变换对输入特征图进行变形，然后在应用坐标注意力之前进行处理。相应地修改forward方法，并在具有几何变化的数据集上评估有效性，比较特征表示、性能和计算效率与原始CoordAtt和其他变体的差异。确保变换网络高效，以保持最小的开销。",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "nonlocal_coordatt",
+        "Title": "在坐标注意力中融入非局部注意力以增强长程特征依赖",
+        "Experiment": "在CoordAtt模块中引入一个轻量级的非局部注意力机制。实现一个简化版本的非局部块，有效捕捉全局上下文。修改forward方法以首先计算这些非局部注意力特征，并将其与现有坐标注意力特征集成，然后在应用最终注意力权重之前进行处理。通过在一个小型基准数据集上评估，重点关注特征表示的改进和捕捉长程依赖关系。比较与原始CoordAtt和其他变体的计算效率和准确性改进。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "dual_domain_coordatt",
+        "Title": "在坐标注意力中集成双域注意力以增强特征表示",
+        "Experiment": "修改CoordAtt模块，以结合空间和频域注意力机制。对输入特征图执行快速傅里叶变换（FFT）以捕捉频域信息。分别计算空间和频域的注意力权重，然后使用简单的加权和或连接后跟线性变换进行合并。调整forward方法以包含这些步骤，并在一个小型基准数据集上评估模块的性能，比较特征表示、准确性和计算效率与原始CoordAtt和其他变体的改进。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 10
+    },
+    {
+        "Name": "deformable_pooling_coordatt",
+        "Title": "通过可变形池化增强坐标注意力以动态捕捉空间特征",
+        "Experiment": "在CoordAtt模块中将`nn.AdaptiveAvgPool2d`操作替换为自定义的可变形池化层。为池化区域实现可学习的偏移量，根据输入特征调整，使池化操作能够捕捉更复杂的空间层次结构。确保可变形池化层轻量级，以保持计算效率。通过在一个小型基准数据集上评估修改后的CoordAtt的性能，比较特征表示质量和准确性与原始实现的改进。",
+        "Interestingness": 9,
+        "Feasibility": 7,
+        "Novelty": 9
+    },
+    {
+        "Name": "global_context_coordatt",
+        "Title": "在坐标注意力中融入全局上下文以增强特征表示",
+        "Experiment": "在CoordAtt模块中引入一个全局上下文块。对输入特征图执行全局平均池化以提取全局上下文向量。使用这些向量通过与现有坐标注意力特征集成来调制注意力权重。修改forward方法以在应用空间注意力机制之前包含此全局上下文。通过在一个小型基准数据集上评估，比较特征表示和性能与原始CoordAtt和其他变体的影响。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "sparse_coordatt",
+        "Title": "在坐标注意力中融入稀疏性诱导正则化以实现高效的特征表示",
+        "Experiment": "在CoordAtt模块的训练过程中集成L1正则化项，以在特征图中诱导稀疏性。修改损失函数以包含此L1惩罚，鼓励初始卷积层输出的稀疏性。通过在一个小型基准数据集上测试，评估对特征表示质量和计算效率的影响。比较准确性、特征区分和计算开销与原始CoordAtt和其他变体的结果。",
+        "Interestingness": 8,
+        "Feasibility": 8,
+        "Novelty": 8
+    },
+    {
+        "Name": "shared_params_coordatt",
+        "Title": "在坐标注意力中融入共享可学习参数以实现紧凑的特征表示",
+        "Experiment": "修改CoordAtt模块，引入一个共享参数块，可供多个网络组件（如卷积层和激活函数）访问。将此共享参数块实现为一个具有可学习参数的独立模块。通过调整conv1、conv_h和conv_w层以利用这些共享参数，将其集成到CoordAtt模块中。通过在一个小型基准数据集上测试，比较参数数量减少和计算效率与原始CoordAtt和其他变体的性能和表示质量。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    },
+    {
+        "Name": "cross_dim_coordatt",
+        "Title": "在坐标注意力中融入跨维度注意力以增强空间交互",
+        "Experiment": "修改CoordAtt类，以包含跨维度注意力机制。实现一个注意力机制，通过某种形式的矩阵乘法同时捕捉高度和宽度维度的交互。调整forward方法以计算这些注意力权重，并将其与现有坐标注意力特征集成，然后在应用它们到输入之前进行处理。通过在一个小型基准数据集上测试，比较性能和计算效率与原始CoordAtt和其他变体，评估对特征表示的影响。",
+        "Interestingness": 9,
+        "Feasibility": 8,
+        "Novelty": 9
+    }
+]

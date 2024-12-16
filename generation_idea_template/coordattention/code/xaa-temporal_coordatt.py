@@ -1,16 +1,16 @@
 """
-Modify the `CoordAtt` class to replace standard convolutions with depthwise separable convolutions
-Implement a new class `DepthwiseSeparableConv` and use it to replace `conv1`, `conv_h`, and `conv_w`
-Each depthwise separable convolution consists of a depthwise convolution followed by a pointwise convolution
-Evaluate the efficiency improvements by measuring parameter count and computational time, and compare the accuracy on a small benchmark dataset against the original implementation
+Add a lightweight temporal attention mechanism to the CoordAtt module
+Introduce 1D convolutions that operate on temporal sequences derived from input feature maps
+Modify the forward method to compute temporal attention weights and integrate them with spatial attention
+Evaluate the effectiveness on synthetic sequential data to assess improvements in temporal feature representations, while monitoring any additional computational cost incurred
 
 """
 
-# Modified code
+# 可以一试
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 class h_sigmoid(nn.Module):
     def __init__(self, inplace=True):
@@ -20,7 +20,6 @@ class h_sigmoid(nn.Module):
     def forward(self, x):
         return self.relu(x + 3) / 6
 
-
 class h_swish(nn.Module):
     def __init__(self, inplace=True):
         super(h_swish, self).__init__()
@@ -29,33 +28,25 @@ class h_swish(nn.Module):
     def forward(self, x):
         return x * self.sigmoid(x)
 
-
-class DepthwiseSeparableConv(nn.Module):
-    def __init__(self, inp, oup, kernel_size=1, stride=1, padding=0):
-        super(DepthwiseSeparableConv, self).__init__()
-        self.depthwise = nn.Conv2d(inp, inp, kernel_size=kernel_size, stride=stride, padding=padding, groups=inp)
-        self.pointwise = nn.Conv2d(inp, oup, kernel_size=1, stride=1, padding=0)
-
-    def forward(self, x):
-        x = self.depthwise(x)
-        x = self.pointwise(x)
-        return x
-
-
 class CoordAtt(nn.Module):
-    def __init__(self, inp, reduction=32):
+    def __init__(self, inp, reduction=32, temporal_reduction=4):
         super(CoordAtt, self).__init__()
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))
 
         mip = max(8, inp // reduction)
 
-        self.conv1 = DepthwiseSeparableConv(inp, mip, kernel_size=1, stride=1, padding=0)
+        self.conv1 = nn.Conv2d(inp, mip, kernel_size=1, stride=1, padding=0)
         self.bn1 = nn.BatchNorm2d(mip)
         self.act = h_swish()
 
-        self.conv_h = DepthwiseSeparableConv(mip, inp, kernel_size=1, stride=1, padding=0)
-        self.conv_w = DepthwiseSeparableConv(mip, inp, kernel_size=1, stride=1, padding=0)
+        self.conv_h = nn.Conv2d(mip, inp, kernel_size=1, stride=1, padding=0)
+        self.conv_w = nn.Conv2d(mip, inp, kernel_size=1, stride=1, padding=0)
+
+        # Temporal Attention Module
+        self.temporal_conv1 = nn.Conv1d(inp, inp // temporal_reduction, kernel_size=3, padding=1)
+        self.temporal_bn1 = nn.BatchNorm1d(inp // temporal_reduction)
+        self.temporal_conv2 = nn.Conv1d(inp // temporal_reduction, inp, kernel_size=3, padding=1)
 
     def forward(self, x):
         identity = x
@@ -75,7 +66,15 @@ class CoordAtt(nn.Module):
         a_h = self.conv_h(x_h).sigmoid()
         a_w = self.conv_w(x_w).sigmoid()
 
-        out = identity * a_w * a_h
+        # Temporal attention computation
+        temporal_x = x.view(n, c, -1)  # Reshape to (batch_size, channels, temporal_dim)
+        t = self.temporal_conv1(temporal_x)
+        t = self.temporal_bn1(t)
+        t = F.relu(t)
+        t = self.temporal_conv2(t).sigmoid()
+        t = t.view(n, c, h, w)  # Reshape back to original dimensions
+
+        out = identity * a_w * a_h * t
 
         return out
 

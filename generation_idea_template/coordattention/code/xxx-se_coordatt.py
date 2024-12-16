@@ -1,18 +1,18 @@
 """
-Integrate a frequency domain analysis step within the CoordAtt module
-Implement a function to perform Fast Fourier Transform (FFT) on the input feature maps, focusing on extracting significant frequency components
-Use these components to modulate the attention weights in the CoordAtt module
-Modify the forward method to incorporate this frequency domain information before applying the spatial attention mechanism
-Evaluate the impact on feature representation using metrics such as accuracy, feature representation quality, and computational efficiency by testing on a small benchmark dataset
-Compare the performance to the original CoordAtt and other variants
+Integrate a Squeeze-and-Excitation (SE) block within the CoordAtt module
+Before applying the coordinate attention, add an SE block that squeezes the spatial dimensions and excites channels based on global average pooling
+Modify the forward method to include this SE block before the existing coordinate attention operations
+Evaluate the effectiveness by testing on a small benchmark dataset, comparing feature representation and attention quality to the original CoordAtt, and analyzing the computational overhead and parameter count
 
 """
+
+# 创新不足
 
 # Modified code
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.fft
+
 
 class h_sigmoid(nn.Module):
     def __init__(self, inplace=True):
@@ -22,6 +22,7 @@ class h_sigmoid(nn.Module):
     def forward(self, x):
         return self.relu(x + 3) / 6
 
+
 class h_swish(nn.Module):
     def __init__(self, inplace=True):
         super(h_swish, self).__init__()
@@ -30,9 +31,29 @@ class h_swish(nn.Module):
     def forward(self, x):
         return x * self.sigmoid(x)
 
+
+class SEBlock(nn.Module):
+    def __init__(self, inp, reduction=16):
+        super(SEBlock, self).__init__()
+        self.global_avgpool = nn.AdaptiveAvgPool2d(1)
+        self.fc1 = nn.Conv2d(inp, inp // reduction, kernel_size=1, padding=0)
+        self.relu = nn.ReLU(inplace=True)
+        self.fc2 = nn.Conv2d(inp // reduction, inp, kernel_size=1, padding=0)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        se = self.global_avgpool(x)
+        se = self.fc1(se)
+        se = self.relu(se)
+        se = self.fc2(se)
+        se = self.sigmoid(se)
+        return x * se
+
+
 class CoordAtt(nn.Module):
     def __init__(self, inp, reduction=32):
         super(CoordAtt, self).__init__()
+        self.se_block = SEBlock(inp, reduction=reduction)
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))
 
@@ -46,18 +67,9 @@ class CoordAtt(nn.Module):
         self.conv_w = nn.Conv2d(mip, inp, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
+        # Apply SE block
+        x = self.se_block(x)
         identity = x
-
-        # Compute FFT on a downsampled version of input feature maps
-        pool_x = F.adaptive_avg_pool2d(x, (x.size(2) // 2, x.size(3) // 2))
-        fft_x = torch.fft.fft2(pool_x)
-        fft_x = torch.fft.fftshift(fft_x)
-
-        # Extract significant frequency components
-        freq_magnitude = torch.abs(fft_x)
-
-        # Normalize frequency components to modulate attention
-        freq_magnitude = (freq_magnitude - freq_magnitude.min()) / (freq_magnitude.max() - freq_magnitude.min())
 
         n, c, h, w = x.size()
         x_h = self.pool_h(x)
@@ -73,10 +85,6 @@ class CoordAtt(nn.Module):
 
         a_h = self.conv_h(x_h).sigmoid()
         a_w = self.conv_w(x_w).sigmoid()
-
-        # Modulate attention weights with frequency magnitude
-        a_h = a_h * F.interpolate(freq_magnitude[:, :, :h, :], size=(h, 1))
-        a_w = a_w * F.interpolate(freq_magnitude[:, :, :, :w], size=(1, w))
 
         out = identity * a_w * a_h
 
