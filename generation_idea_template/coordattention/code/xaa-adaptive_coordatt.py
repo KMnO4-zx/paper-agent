@@ -4,9 +4,13 @@ Modify the forward method to incorporate this mechanism, allowing it to adaptive
 Evaluate the adaptability and performance on a small benchmark dataset, comparing it with the original CoordAtt and other versions, focusing on accuracy, feature representation quality, and computational efficiency
 The heuristic could be a rule-based system or a lightweight decision tree
 
+在CoordAtt模块中实现一个基于输入特征图统计（如方差或熵）的简单启发式机制，以动态调整注意力参数。
+修改forward方法以包含此机制，使其能够自适应地配置注意力策略。
+通过在一个小型基准数据集上评估其适应性和性能，
+比较与原始CoordAtt和其他版本的差异，重点关注准确性、特征表示质量和计算效率。启发式方法可以是基于规则的系统或轻量级决策树。
 """
 
-# xaa 可以试试
+# xaa 可以试试 xxx实测不行 学不到任何能力
 
 # Modified code
 
@@ -31,9 +35,9 @@ class h_swish(nn.Module):
     def forward(self, x):
         return x * self.sigmoid(x)
 
-class CoordAtt(nn.Module):
+class ADACoordAtt(nn.Module):
     def __init__(self, inp, reduction=32):
-        super(CoordAtt, self).__init__()
+        super(ADACoordAtt, self).__init__()
         self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.pool_w = nn.AdaptiveAvgPool2d((1, None))
 
@@ -86,7 +90,7 @@ class CoordAtt(nn.Module):
 
 if __name__ == '__main__':
     x = torch.randn(2, 64, 32, 32)
-    att = CoordAtt(inp=64, reduction=32)
+    att = ADACoordAtt(inp=64, reduction=32)
     out = att(x)
     print("输入尺寸:", x.shape)
     print("输出尺寸:", out.shape)
