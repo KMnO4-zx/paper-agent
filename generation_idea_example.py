@@ -8,25 +8,28 @@ from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv())
 
 # gpt-4o
-openai_model = "gemini-2.0-flash-exp"
+openai_model = "gpt-4o-2024-08-06"
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL"))
 
 # deepseek-chat
 deepseek_model = "deepseek-chat"
 deepseek_clinet = OpenAI(api_key=os.getenv('DEEPSEEK_API_KEY'), base_url=os.getenv('DEEPSEEK_BASE_URL'))
 
-base_dir = './generation_idea_template/coordattention-gemini/'
+base_dir = './generation_idea_template/probiou/'
 
 # generate ideas
 # 会自动保存 ideas 的结果到文件中，下次运行时会直接从文件中加载
-ideas = generate_ideas(
-    base_dir=base_dir,
-    client=openai_client,
-    model=openai_model,
-    skip_generation=False,
-    max_num_generations=20,
-    num_reflections=5,
-)
+# ideas = generate_ideas(
+#     base_dir=base_dir,
+#     client=openai_client,
+#     model=openai_model,
+#     skip_generation=False,
+#     max_num_generations=20,
+#     num_reflections=5,
+# )
+
+with open(os.path.join(base_dir, 'ideas.json'), 'r') as f:
+    ideas = json.load(f)
 
 # check novelty
 # 会自动更新 novelty 的结果到 ideas.json 文件中，下次运行时会直接从文件中加载

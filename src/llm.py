@@ -28,7 +28,8 @@ def get_response_from_llm(
         "gpt-4o-mini-2024-07-18",
         "gpt-4o-2024-08-06",
         "gpt-4o",
-        "gemini-2.0-flash-exp"
+        "gemini-2.0-flash-exp",
+        "gemini-exp-1206"
     ]:
         new_msg_history = msg_history + [{"role": "user", "content": msg}]  # 将用户消息添加到历史记录中
         response = client.chat.completions.create(
@@ -99,6 +100,7 @@ def get_batch_responses_from_llm(
         "gpt-4o-mini-2024-07-18",
         "gpt-4o-2024-08-06",
         "gpt-4o",
+        "gemini-exp-1206"
     ]:
         new_msg_history = msg_history + [{"role": "user", "content": msg}]  # 将用户消息添加到历史记录中
         response = client.chat.completions.create(
